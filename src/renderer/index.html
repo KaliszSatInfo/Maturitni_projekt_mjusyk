@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Mjusyk</title>
+    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+    />
+
+    <link href="./assets/main.css" type="text/css" rel="stylesheet" />
+    <link href="./assets/card.css" type="text/css" rel="stylesheet" />
+  </head>
+
+  <body>
+    <button id="open-folder">Select folder</button>
+    <div id="file-grid"></div>
+
+    <script type="module" src="./src/renderer.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+#file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.file-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #222;
+  color: white;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.album-art {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.file-label {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  text-align: center;
+  word-break: break-word;
+}
