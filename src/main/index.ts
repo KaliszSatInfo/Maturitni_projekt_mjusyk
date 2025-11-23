@@ -1,10 +1,9 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import fs from 'fs';
-import path from 'path';
-import musicMetadata from 'music-metadata';
+import './playerFunctions';
+
 
 function createWindow(): void {
   // Create the browser window.
@@ -53,39 +52,6 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  ipcMain.handle('folder:open', async () => {
-    const { canceled, filePaths } = await dialog.showOpenDialog({
-      properties: ['openDirectory']
-    });
-    if (canceled) return null;
-    return filePaths[0];
-  });
-
-  ipcMain.handle('folder:read', async (_event, folderPath: string) => {
-    if (!folderPath) return [];
-    const audioExtensions = ['.mp3', '.flac', '.wav', '.ogg'];
-    try {
-      const files = fs.readdirSync(folderPath).filter(file =>
-        audioExtensions.includes(path.extname(file).toLowerCase())
-      );
-      return files;
-    } catch (err) {
-      console.error('Error reading folder', err);
-      return [];
-    }
-  });
-
-  ipcMain.handle('file:getAlbumArt', async (_event, filePath: string) => {
-    try {
-      const metadata = await musicMetadata.parseFile(filePath);
-      const picture = metadata.common.picture?.[0];
-      if (!picture) return null;
-      return `data:${picture.format};base64,${picture.data.toString('base64')}`;
-    } catch (err) {
-      console.error('Error reading metadata', filePath, err);
-      return null;
-    }
-  });
 
   createWindow()
 

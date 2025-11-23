@@ -1,11 +1,14 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('api', {
-  openFolder: () => ipcRenderer.invoke('folder:open'),
+  openFolder: (defaultFolder?: string) => ipcRenderer.invoke('folder:open', defaultFolder),
   readFolder: (folderPath: string) => ipcRenderer.invoke('folder:read', folderPath),
-  getAlbumArt: (filePath: string) => ipcRenderer.invoke('file:getAlbumArt', filePath)
-});
+  getAlbumArt: (filePath: string) => ipcRenderer.invoke('file:getAlbumArt', filePath),
 
+  saveFolders: (folders: string[]) => ipcRenderer.invoke('config:saveFolders', folders),
+  loadFolders: () => ipcRenderer.invoke('config:loadFolders'),
+  getMetadata: (filePath: string) => ipcRenderer.invoke('file:getMetadata', filePath)
+});
 
 
 /*import { electronAPI } from '@electron-toolkit/preload'

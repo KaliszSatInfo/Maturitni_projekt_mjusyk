@@ -4,9 +4,13 @@ declare global {
   interface Window {
     electron: ElectronAPI;
     api: {
-      openFolder: () => Promise<string | null>;
+      openFolder: (defaultFolder?: string) => Promise<string | null>;
       readFolder: (folderPath: string) => Promise<string[]>;
       getAlbumArt: (filePath: string) => Promise<string | null>;
+
+      saveFolders: (folders: string[]) => Promise<boolean>;
+      loadFolders: () => Promise<string[]>;
+      getMetadata: (filePath: string) => Promise<any>;
     };
   }
 }
