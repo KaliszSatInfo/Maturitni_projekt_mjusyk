@@ -11,6 +11,9 @@ declare global {
       saveFolders: (folders: string[]) => Promise<boolean>;
       loadFolders: () => Promise<string[]>;
       getMetadata: (filePath: string) => Promise<any>;
+      
+      saveSettings: (settings: any) => Promise<boolean>;
+      loadSettings: () => Promise<any>;
     };
   }
 }

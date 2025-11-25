@@ -82,3 +82,17 @@
   background-color: #222;
   color: #fff;
 }
+
+.metadata-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.metadata-option {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}

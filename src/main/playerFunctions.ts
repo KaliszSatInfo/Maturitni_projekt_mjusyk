@@ -4,6 +4,8 @@ import musicMetadata from 'music-metadata';
 import { app, ipcMain, dialog } from 'electron';
 
 const configPath = path.join(app.getPath('userData'), 'config.json');
+const settingsPath = path.join(app.getPath('userData'), 'settings.json');
+
 
 // PICK A FOLDER
 ipcMain.handle('folder:open', async (_event, defaultFolder: string | null) => {
@@ -86,13 +88,33 @@ ipcMain.handle('file:getMetadata', async (_event, filePath: string) => {
       year: metadata.common.year ?? '',
       trackNumber: metadata.common.track?.no ?? '',
       diskNumber: metadata.common.disk?.no ?? '',
-      duration: metadata.format.duration ?? '',
-      picture: metadata.common.picture?.[0]
-        ? `data:${metadata.common.picture[0].format};base64,${metadata.common.picture[0].data.toString('base64')}`
-        : null
+      duration: metadata.format.duration ?? ''
     };
   } catch (err) {
     console.error('Error reading metadata', filePath, err);
     return {};
+  }
+});
+
+// LOAD SETTINGS FOR POŘADÍ OF METADATA COLUMNS
+ipcMain.handle('settings:load', async () => {
+  try {
+    if (!fs.existsSync(settingsPath)) return {};
+    const raw = fs.readFileSync(settingsPath, 'utf-8');
+    return JSON.parse(raw);
+  } catch (err) {
+    console.error('Error loading settings', err);
+    return {};
+  }
+});
+
+// SAVE SETTINGS FOR POŘADÍ OF METADATA COLUMNS
+ipcMain.handle('settings:save', async (_event, settings: any) => {
+  try {
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
+    return true;
+  } catch (err) {
+    console.error('Error saving settings', err);
+    return false;
   }
 });
