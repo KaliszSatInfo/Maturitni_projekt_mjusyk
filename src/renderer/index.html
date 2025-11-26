@@ -7,44 +7,46 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
     />
-    <link href="./assets/main.css" type="text/css" rel="stylesheet" />
+    <!--<link href="./assets/main.css" type="text/css" rel="stylesheet" /> -->
     <link href="./assets/card.css" type="text/css" rel="stylesheet" />
   </head>
 
 <body>
   <div id="side-panel">
+
     <button id="choose-folder">Select folder</button>
     <button id="toggle-view">Toggle Grid/Table</button>
+
     <div id="metadata-dropdown-container">
+      <div id="metadata-options" class="metadata-options"></div>
+    </div>
 
-    <div id="metadata-options" class="metadata-options"></div>
-</div>
-
+    <h3>Folders</h3>
     <div id="folder-list"></div>
+
+    <h3>Playlists</h3>
+    <button id="new-playlist">New Playlist</button>
+    <div id="playlist-list"></div>
+
   </div>
 
   <div id="file-grid"></div>
 
-  <div id="loader" style="
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 1.5rem;
-    z-index: 1000;
-    display: none;
-  ">
-    Loading music...
+  <div id="loader">Loading music...</div>
+
+  <div id="new-playlist-modal">
+    <div>
+      <h3>Create Playlist</h3>
+      <input 
+        id="playlist-name-input" 
+        type="text" 
+        placeholder="Playlist name…" 
+      />
+      <button id="playlist-create-btn">Create</button>
+      <button id="playlist-cancel-btn">Cancel</button>
+    </div>
   </div>
 
-  
   <script type="module" src="./src/renderer.ts"></script>
 </body>
-
 </html>
