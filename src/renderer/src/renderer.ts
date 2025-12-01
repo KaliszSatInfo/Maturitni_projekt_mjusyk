@@ -10,6 +10,8 @@ const playlistModal = document.getElementById('new-playlist-modal')!;
 const playlistInput = document.getElementById('playlist-name-input') as HTMLInputElement;
 const playlistCreateBtn = document.getElementById('playlist-create-btn')!;
 const playlistCancelBtn = document.getElementById('playlist-cancel-btn')!;
+const exportBtn = document.getElementById('export-playlist') as HTMLButtonElement;
+const importBtn = document.getElementById('import-playlist') as HTMLButtonElement;
 
 const placeholder = '../assets/placeholder.png';
 const metadataFields = ["art","title","artist","album","genre","year","trackNumber","diskNumber","duration"];
@@ -32,6 +34,26 @@ async function loadAllPlaylists() {
 async function saveAllPlaylists() {
   await window.api.savePlaylists(playlists);
 }
+
+exportBtn.addEventListener("click", async () => {
+  if (!currentPlaylist) {
+    alert("Select a playlist to export.");
+    return;
+  }
+
+  const ok = await window.api.playlists.export(currentPlaylist);
+  if (ok) alert("Playlist exported!");
+});
+
+importBtn.addEventListener("click", async () => {
+  const imported = await window.api.playlists.import();
+  if (!imported) return;
+
+  playlists.push(imported);
+  renderPlaylists();
+  alert("Playlist imported!");
+});
+
 
 function renderPlaylists() {
   playlistContainer.innerHTML = "";
@@ -246,49 +268,75 @@ async function loadAllMusic() {
   const currentFiles = new Set<string>();
 
   for (const folder of folderPaths) {
-    
     let files = await window.api.readFolder(folder);
+
     if (isViewingPlaylist && currentPlaylist) {
-      const playlist = currentPlaylist;
-      files = files.filter(f => playlist.songPaths.includes(f));
+      files = files.filter(f => currentPlaylist!.songPaths.includes(f));
     }
 
     for (const filePath of files) {
       currentFiles.add(filePath);
+
       if (!songCache[filePath]) {
         const rawMetadata = await window.api.getMetadata(filePath);
         const albumArt = await window.api.getAlbumArt(filePath);
         songCache[filePath] = { metadata: { ...rawMetadata, art: "" }, albumArt };
       }
+
       const { metadata, albumArt } = songCache[filePath];
 
       if (isTableView) {
         const tr = document.createElement('tr');
+
         visibleMetadata.forEach(field => {
           const td = document.createElement('td');
-          td.innerHTML = field === "art" ? `<img src="${albumArt || placeholder}" class="album-art" />` : (field === "duration" ? formatDuration(metadata[field]) : metadata[field] ?? "");
-          td.addEventListener('contextmenu', e => { e.preventDefault(); showAddToPlaylistMenu(filePath, e.pageX, e.pageY); });
+          td.innerHTML = field === "art"
+            ? `<img src="${albumArt || placeholder}" class="album-art" />`
+            : (field === "duration" ? formatDuration(metadata[field]) : metadata[field] ?? "");
+
+          td.addEventListener('contextmenu', e => {
+            e.preventDefault();
+            showAddToPlaylistMenu(filePath, e.pageX, e.pageY);
+          });
+
           tr.appendChild(td);
         });
+
+        tr.addEventListener('dblclick', () => {
+          window.api.playTrack(files, files.indexOf(filePath));
+        });
+
         tableRows.push(tr);
       } else {
         const fileName = filePath.split(/[/\\]/).pop()!;
         const card = document.createElement('div');
         card.className = 'file-card';
         card.innerHTML = `<img src="${albumArt || placeholder}" class="album-art" /><div class="file-label">${fileName}</div>`;
-        card.addEventListener('contextmenu', e => { e.preventDefault(); showAddToPlaylistMenu(filePath, e.pageX, e.pageY); });
+
+        card.addEventListener('contextmenu', e => {
+          e.preventDefault();
+          showAddToPlaylistMenu(filePath, e.pageX, e.pageY);
+        });
+
+        card.addEventListener('dblclick', () => {
+          window.api.playTrack(files, files.indexOf(filePath));
+        });
+
         gridCards.push(card);
       }
     }
   }
 
-  for (const cachedPath of Object.keys(songCache)) if (!currentFiles.has(cachedPath)) delete songCache[cachedPath];
+  for (const cachedPath of Object.keys(songCache)) {
+    if (!currentFiles.has(cachedPath)) delete songCache[cachedPath];
+  }
 
   if (isTableView) {
     grid.classList.add('table-view');
     const table = document.createElement('table');
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
+
     visibleMetadata.forEach(field => {
       const th = document.createElement('th');
       th.textContent = field === "art" ? "Art" : field.charAt(0).toUpperCase() + field.slice(1);
@@ -299,8 +347,10 @@ async function loadAllMusic() {
       th.addEventListener("drop", onColumnDrop);
       headerRow.appendChild(th);
     });
+
     thead.appendChild(headerRow);
     table.appendChild(thead);
+
     const tbody = document.createElement('tbody');
     tableRows.forEach(tr => tbody.appendChild(tr));
     table.appendChild(tbody);

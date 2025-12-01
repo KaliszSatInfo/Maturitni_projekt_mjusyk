@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import musicMetadata from 'music-metadata';
-import { app, ipcMain, dialog } from 'electron';
+import { app, ipcMain, dialog, BrowserWindow } from 'electron';
+import { setQueueLocal, setIndexLocal } from './musicFunctions';
 
 const configPath = path.join(app.getPath('userData'), 'config.json');
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
@@ -130,3 +131,68 @@ export function loadPlaylists(): any[] {
 export function savePlaylists(playlists: any[]) {
   fs.writeFileSync(playlistsPath, JSON.stringify(playlists, null, 2));
 }
+
+ipcMain.handle('playlists:export', async (_, playlist) => {
+  const { filePaths, canceled } = await dialog.showOpenDialog({
+    title: "Choose Export Folder",
+    properties: ["openDirectory"]
+  });
+
+  if (canceled || !filePaths.length) return false;
+
+  const folder = filePaths[0];
+  const dest = path.join(folder, `${playlist.name}.json`);
+
+  await fs.promises.writeFile(dest, JSON.stringify(playlist, null, 2), "utf8");
+
+  return true;
+});
+
+
+ipcMain.handle('playlists:import', async () => {
+  const { filePaths, canceled } = await dialog.showOpenDialog({
+    title: "Import Playlist",
+    properties: ["openFile"],
+    filters: [{ name: "JSON Playlist", extensions: ["json"] }]
+  });
+
+  if (canceled || !filePaths.length) return null;
+
+  const raw = await fs.promises.readFile(filePaths[0], "utf-8");
+  const playlist = JSON.parse(raw);
+
+  const playlistsPath = path.join(app.getPath('userData'), 'playlists.json');
+  const list = JSON.parse(await fs.promises.readFile(playlistsPath, 'utf8').catch(() => '[]'));
+
+  list.push(playlist);
+
+  await fs.promises.writeFile(playlistsPath, JSON.stringify(list, null, 2), 'utf8');
+
+  return playlist;
+});
+
+ipcMain.handle('file:readDataUrl', async (_event, filePath: string) => {
+  try {
+    if (!filePath) return null;
+    const data = await fs.promises.readFile(filePath);
+    const b64 = data.toString('base64');
+    console.debug('[main] readDataUrl length=', b64.length, 'for', filePath);
+    return `data:audio/*;base64,${b64}`;
+  } catch (err) {
+    console.error('Error reading file for data URL', filePath, err);
+    return null;
+  }
+});
+
+ipcMain.on('play-track', (_event, { queue, index }) => {
+  try {
+    setQueueLocal(queue || []);
+    setIndexLocal(typeof index === 'number' ? index : 0);
+    const win = BrowserWindow.getAllWindows()[0];
+    if (win) {
+      win.webContents.send('load-queue', { queue, index });
+    }
+  } catch (err) {
+    console.error('Error handling play-track', err);
+  }
+});

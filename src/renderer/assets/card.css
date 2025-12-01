@@ -1,7 +1,3 @@
-/* ===============================
-   GLOBAL + LAYOUT
-   =============================== */
-
 body {
   margin: 0;
   background: #111;
@@ -46,16 +42,12 @@ body {
 
 #file-grid {
   flex: 1;
-  padding: 20px;
+  padding: 20px 20px 120px 20px;
   overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, 150px);
   gap: 16px;
 }
-
-/* ===============================
-   LOADER OVERLAY
-   =============================== */
 
 #loader {
   position: fixed;
@@ -71,10 +63,6 @@ body {
   font-size: 1.5rem;
   z-index: 1000;
 }
-
-/* ===============================
-   FILE CARD (GRID VIEW)
-   =============================== */
 
 .file-card {
   background: #1b1b1b;
@@ -109,10 +97,6 @@ body {
   white-space: nowrap;
   width: 100%;
 }
-
-/* ===============================
-   TABLE VIEW
-   =============================== */
 
 #file-grid.table-view {
   display: block;
@@ -165,10 +149,6 @@ body {
   color: #fff;
 }
 
-/* ===============================
-   METADATA OPTIONS PANEL
-   =============================== */
-
 .metadata-options {
   display: flex;
   flex-direction: column;
@@ -182,10 +162,6 @@ body {
   gap: 6px;
   cursor: pointer;
 }
-
-/* ===============================
-   PLAYLIST CREATION MODAL
-   =============================== */
 
 #new-playlist-modal {
   position: fixed;
@@ -239,7 +215,6 @@ body {
   color: #fff;
 }
 
-/* Context menu styling */
 .context-menu {
   position: absolute;
   background: #222;
@@ -249,22 +224,19 @@ body {
   z-index: 9999;
 }
 
-/* Folder item buttons */
 .folder-item button,
 .playlist-item button {
   margin-left: 8px;
   cursor: pointer;
 }
 
-/* Album art */
 .album-art {
-  width: 60px; /* or your preferred size */
+  width: 60px;
   height: 60px;
   object-fit: cover;
   border-radius: 4px;
 }
 
-/* File card */
 .file-card {
   display: flex;
   flex-direction: column;
@@ -279,7 +251,6 @@ body {
   font-size: 0.9rem;
 }
 
-/* Table view adjustments */
 .table-view table {
   width: 100%;
   border-collapse: collapse;
@@ -293,10 +264,119 @@ body {
 }
 
 .table-view th {
-  cursor: grab; /* for drag & drop columns */
+  cursor: grab;
 }
 
 .metadata-option {
   margin-right: 10px;
   display: inline-block;
+}
+
+#music-player {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 90px;
+  background: #1e1e1e;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-top: 1px solid #333;
+  z-index: 999;
+}
+
+#player-panel {
+  position: fixed;
+  bottom: 0;
+  left: 260px;
+  right: 0;
+  height: 90px;
+  background: #1e1e1e;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-top: 1px solid #333;
+  z-index: 999;
+}
+
+#player-panel #player-left,
+#player-panel #player-center,
+#player-panel #player-right {
+  display: flex;
+  align-items: center;
+}
+
+/* Control button active state */
+.control-button {
+  background: none;
+  color: white;
+  border: none;
+  font-size: 18px;
+  margin: 0 6px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+}
+.control-button.active {
+  background: rgba(255,255,255,0.06);
+}
+
+#player-left {
+  display: flex;
+  align-items: center;
+}
+
+#player-art {
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  object-fit: cover;
+  margin-right: 10px;
+}
+
+#track-info {
+  display: flex;
+  flex-direction: column;
+}
+
+#track-title {
+  font-weight: bold;
+}
+
+#player-center {
+  text-align: center;
+  flex: 1;
+  max-width: 600px;
+}
+
+#player-buttons button {
+  background: none;
+  color: white;
+  border: none;
+  font-size: 20px;
+  margin: 0 10px;
+  cursor: pointer;
+}
+
+#player-buttons button:hover {
+  opacity: 0.8;
+}
+
+#progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#progress-bar {
+  width: 300px;
+}
+
+#player-right {
+  width: 120px;
 }
