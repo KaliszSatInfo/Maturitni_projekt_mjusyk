@@ -2,6 +2,7 @@ const chooseBtn = document.getElementById('choose-folder')!;
 const grid = document.getElementById('file-grid')!;
 const folderList = document.getElementById('folder-list')!;
 const toggleBtn = document.getElementById('toggle-view')!;
+const widgetBtn = document.getElementById('toggle-widget')!;
 const metadataOptions = document.getElementById('metadata-options')!;
 const loader = document.getElementById('loader')!;
 const playlistContainer = document.getElementById('playlist-list')!;
@@ -12,6 +13,7 @@ const playlistCreateBtn = document.getElementById('playlist-create-btn')!;
 const playlistCancelBtn = document.getElementById('playlist-cancel-btn')!;
 const exportBtn = document.getElementById('export-playlist') as HTMLButtonElement;
 const importBtn = document.getElementById('import-playlist') as HTMLButtonElement;
+const statsBtn = document.getElementById('show-stats') as HTMLButtonElement | null;
 
 const placeholder = '../assets/placeholder.png';
 const metadataFields = ["art","title","artist","album","genre","year","trackNumber","diskNumber","duration"];
@@ -230,6 +232,69 @@ window.api.loadSettings().then(settings => {
   loadAllMusic();
 });
 
+statsBtn?.addEventListener('click', async () => {
+  try {
+    const existing = document.getElementById('stats-modal');
+    if (existing) existing.remove();
+
+    const settings = await window.api.loadSettings();
+    const playCounts: Record<string, number> = settings.playCounts || {};
+    const artistCounts: Record<string, number> = settings.artistCounts || {};
+
+    const topSongs = Object.entries(playCounts).sort((a, b) => b[1] - a[1]).slice(0, 50);
+    const topArtists = Object.entries(artistCounts).sort((a, b) => b[1] - a[1]).slice(0, 50);
+
+    const modal = document.createElement('div');
+    modal.id = 'stats-modal';
+    modal.innerHTML = `
+      <div>
+        <h3>Playback Stats</h3>
+        <div id="stats-content">
+          <div class="stats-section">
+            <h4>Top Songs</h4>
+            <ul id="top-songs" class="stats-list"></ul>
+          </div>
+          <div class="stats-section">
+            <h4>Top Artists</h4>
+            <ul id="top-artists" class="stats-list"></ul>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+          <button id="stats-close">Close</button>
+        </div>
+      </div>`;
+
+    document.body.appendChild(modal);
+
+    const topSongsEl = modal.querySelector('#top-songs') as HTMLUListElement;
+    const topArtistsEl = modal.querySelector('#top-artists') as HTMLUListElement;
+
+    topSongs.forEach(([path, cnt]) => {
+      const li = document.createElement('li');
+      li.textContent = `${path.split(/[/\\]/).pop() || path} — ${cnt}`;
+      const playBtn = document.createElement('button');
+      playBtn.className = 'stats-play-btn';
+      playBtn.textContent = 'Play';
+      playBtn.addEventListener('click', () => window.api.playTrack([path], 0));
+      li.appendChild(playBtn);
+      topSongsEl.appendChild(li);
+    });
+
+    topArtists.forEach(([artist, cnt]) => {
+      const li = document.createElement('li');
+      li.textContent = `${artist} — ${cnt}`;
+      topArtistsEl.appendChild(li);
+    });
+
+    const closeBtn = modal.querySelector('#stats-close') as HTMLButtonElement | null;
+    if (closeBtn) closeBtn.addEventListener('click', () => modal.remove());
+    try { (modal as HTMLElement).style.display = 'flex'; } catch {}
+  } catch (e) {
+    console.error('Failed to open stats modal', e);
+    alert('Failed to load stats');
+  }
+});
+
 toggleBtn.addEventListener('click', () => {
   isTableView = !isTableView;
   toggleBtn.textContent = isTableView ? 'Switch to Grid View' : 'Switch to Table View';
@@ -238,26 +303,76 @@ toggleBtn.addEventListener('click', () => {
 });
 
 function showAddToPlaylistMenu(filePath: string, x: number, y: number) {
+  document.querySelectorAll('.context-menu').forEach(n => n.remove());
+
   const menu = document.createElement('div');
   menu.className = 'context-menu';
   menu.style.top = `${y}px`;
   menu.style.left = `${x}px`;
-  playlists.forEach(pl => {
-    const item = document.createElement('div');
-    item.textContent = pl.name;
-    item.className = 'context-item';
-    item.addEventListener('click', async () => {
-      if (!pl.songPaths.includes(filePath)) {
-        pl.songPaths.push(filePath);
-        await saveAllPlaylists();
-      }
-      document.body.removeChild(menu);
+  const addItem = document.createElement('div');
+  addItem.textContent = 'Add';
+  addItem.className = 'context-item context-parent';
+  menu.appendChild(addItem);
+
+  const sub = document.createElement('div');
+  sub.className = 'context-submenu';
+
+  if (playlists.length === 0) {
+    const no = document.createElement('div');
+    no.textContent = 'No playlists';
+    no.className = 'context-item disabled';
+    sub.appendChild(no);
+  } else {
+    playlists.forEach(pl => {
+      const pitem = document.createElement('div');
+      pitem.textContent = pl.name;
+      pitem.className = 'context-item';
+      pitem.addEventListener('click', async (ev) => {
+        ev.stopPropagation();
+        if (!pl.songPaths.includes(filePath)) {
+          pl.songPaths.push(filePath);
+          await saveAllPlaylists();
+        }
+        if (menu.parentNode) menu.parentNode.removeChild(menu);
+      });
+      sub.appendChild(pitem);
     });
-    menu.appendChild(item);
+  }
+
+  addItem.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    sub.classList.toggle('open');
   });
+
+  menu.appendChild(sub);
+
+  if (currentPlaylist && currentPlaylist.songPaths.includes(filePath)) {
+    const rem = document.createElement('div');
+    rem.textContent = `Remove from ${currentPlaylist.name}`;
+    rem.className = 'context-item';
+    rem.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      currentPlaylist!.songPaths = currentPlaylist!.songPaths.filter(p => p !== filePath);
+      await saveAllPlaylists();
+      if (menu.parentNode) menu.parentNode.removeChild(menu);
+      loadAllMusic();
+    });
+    menu.appendChild(rem);
+  }
+
   document.body.appendChild(menu);
+
   const removeMenu = () => { if (menu.parentNode) menu.parentNode.removeChild(menu); };
-  document.addEventListener('click', removeMenu, { once: true });
+  setTimeout(() => {
+    document.addEventListener('click', removeMenu, { once: true });
+    document.addEventListener('contextmenu', removeMenu, { once: true });
+  }, 0);
+
+  const rect = menu.getBoundingClientRect();
+  const overflowX = rect.right - window.innerWidth;
+  const overflowY = rect.bottom - window.innerHeight;
+  if (overflowX > 0) menu.style.left = `${Math.max(8, x - overflowX)}px`;
+  if (overflowY > 0) menu.style.top = `${Math.max(8, y - overflowY)}px`;
 }
 
 async function loadAllMusic() {
@@ -276,6 +391,7 @@ async function loadAllMusic() {
 
     for (const filePath of files) {
       currentFiles.add(filePath);
+      const fileName = filePath.split(/[/\\]/).pop()!;
 
       if (!songCache[filePath]) {
         const rawMetadata = await window.api.getMetadata(filePath);
@@ -290,9 +406,20 @@ async function loadAllMusic() {
 
         visibleMetadata.forEach(field => {
           const td = document.createElement('td');
-          td.innerHTML = field === "art"
-            ? `<img src="${albumArt || placeholder}" class="album-art" />`
-            : (field === "duration" ? formatDuration(metadata[field]) : metadata[field] ?? "");
+          let content = "";
+          if (field === "art") {
+            content = `<img src="${albumArt || placeholder}" class="album-art" />`;
+          } else if (field === "duration") {
+            content = formatDuration(metadata[field]);
+          } else {
+            const val = metadata[field];
+            if ((val === undefined || val === null || val === "") && field === 'title') {
+              content = fileName;
+            } else {
+              content = val ?? "";
+            }
+          }
+          td.innerHTML = content;
 
           td.addEventListener('contextmenu', e => {
             e.preventDefault();
@@ -311,7 +438,8 @@ async function loadAllMusic() {
         const fileName = filePath.split(/[/\\]/).pop()!;
         const card = document.createElement('div');
         card.className = 'file-card';
-        card.innerHTML = `<img src="${albumArt || placeholder}" class="album-art" /><div class="file-label">${fileName}</div>`;
+        const labelText = (metadata.title && metadata.title !== '') ? metadata.title : fileName;
+        card.innerHTML = `<img src="${albumArt || placeholder}" class="album-art" /><div class="file-label">${labelText}</div>`;
 
         card.addEventListener('contextmenu', e => {
           e.preventDefault();

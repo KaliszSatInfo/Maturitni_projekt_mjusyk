@@ -25,6 +25,7 @@ contextBridge.exposeInMainWorld('api', {
 
   playTrack: (queue: string[], index: number) => ipcRenderer.send("play-track", { queue, index }),
   onLoadQueue: (callback) => ipcRenderer.on("load-queue", (_, data) => callback(data)),
-
   readFileDataUrl: (filePath: string) => ipcRenderer.invoke('file:readDataUrl', filePath),
+  
+  openStats: () => ipcRenderer.invoke('stats:open'),
 });

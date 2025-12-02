@@ -33,8 +33,9 @@ declare global {
 
       playTrack: (queue: string[], index: number) => void;
       onLoadQueue: (callback: (data: { queue: string[]; index: number }) => void) => void;
-
       readFileDataUrl: (filePath: string) => Promise<string | null>;
+      
+      openStats: () => Promise<boolean>;
     }
   }
 }
