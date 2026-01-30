@@ -464,3 +464,34 @@ body {
 #player-right {
   width: 120px;
 }
+
+.context-menu {
+  position: fixed;
+  background: #222;
+  border: 1px solid #555;
+  padding: 4px 0;
+  z-index: 9999;
+  min-width: 160px;
+}
+
+.context-title {
+  color: #aaa;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-bottom: 1px solid #444;
+}
+
+.context-item {
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.context-item:hover {
+  background: #444;
+}
+
+.context-separator {
+  height: 1px;
+  background: #444;
+  margin: 4px 0;
+}

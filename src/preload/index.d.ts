@@ -7,8 +7,8 @@ declare global {
       [x: string]: any;
       playlists: any;
       
-      openFolder: (defaultFolder?: string) => Promise<string | null>;
-      readFolder: (folderPath: string) => Promise<string[]>;
+      openFolder: (defaultFolder?: string) => Promise<string[] | null>;
+      readFolder: (folderPaths: string[]) => Promise<string[]>;
       getAlbumArt: (filePath: string) => Promise<string | null>;
       getMetadata: (filePath: string) => Promise<any>;
 
@@ -33,9 +33,6 @@ declare global {
 
       playTrack: (queue: string[], index: number) => void;
       onLoadQueue: (callback: (data: { queue: string[]; index: number }) => void) => void;
-      readFileDataUrl: (filePath: string) => Promise<string | null>;
-      
-      openStats: () => Promise<boolean>;
     }
   }
 }

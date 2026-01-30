@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('api', {
   openFolder: (defaultFolder?: string) => ipcRenderer.invoke('folder:open', defaultFolder),
-  readFolder: (folderPath: string) => ipcRenderer.invoke('folder:read', folderPath),
+  readFolder: (folderPaths: string[]) => ipcRenderer.invoke('folder:read', folderPaths),
   getAlbumArt: (filePath: string) => ipcRenderer.invoke('file:getAlbumArt', filePath),
   getMetadata: (filePath: string) => ipcRenderer.invoke('file:getMetadata', filePath),
   saveFolders: (folders: string[]) => ipcRenderer.invoke('config:saveFolders', folders),
@@ -25,7 +25,4 @@ contextBridge.exposeInMainWorld('api', {
 
   playTrack: (queue: string[], index: number) => ipcRenderer.send("play-track", { queue, index }),
   onLoadQueue: (callback) => ipcRenderer.on("load-queue", (_, data) => callback(data)),
-  readFileDataUrl: (filePath: string) => ipcRenderer.invoke('file:readDataUrl', filePath),
-  
-  openStats: () => ipcRenderer.invoke('stats:open'),
 });

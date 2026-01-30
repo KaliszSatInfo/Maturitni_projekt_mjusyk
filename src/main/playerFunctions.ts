@@ -10,25 +10,33 @@ const playlistsPath = path.join(app.getPath('userData'), 'playlists.json');
 
 ipcMain.handle('folder:open', async (_event, defaultFolder: string | null) => {
   const { canceled, filePaths } = await dialog.showOpenDialog({
-    properties: ['openDirectory'],
+    properties: ['openDirectory', 'multiSelections'],
     defaultPath: defaultFolder || undefined
   });
+
   if (canceled) return null;
-  return filePaths[0];
+  return filePaths;
 });
 
-ipcMain.handle('folder:read', async (_event, folderPath: string) => {
-  if (!folderPath) return [];
+ipcMain.handle('folder:read', async (_event, folderPaths: string[]) => {
   const audioExtensions = ['.mp3', '.flac', '.wav', '.ogg'];
-  try {
-    const files = fs.readdirSync(folderPath).filter(file =>
-      audioExtensions.includes(path.extname(file).toLowerCase())
-    );
-    return files.map(f => path.join(folderPath, f));
-  } catch (err) {
-    console.error('Error reading folder', err);
-    return [];
+
+  const results: string[] = [];
+
+  for (const folderPath of folderPaths) {
+    try {
+      const files = fs.readdirSync(folderPath).filter(file =>
+        audioExtensions.includes(path.extname(file).toLowerCase())
+      );
+
+      results.push(
+        ...files.map(file => path.join(folderPath, file))
+      );
+    } catch (err) {
+      console.error('Error reading folder', folderPath, err);
+    }
   }
+  return results;
 });
 
 ipcMain.handle('file:getAlbumArt', async (_event, filePath: string) => {
@@ -148,7 +156,6 @@ ipcMain.handle('playlists:export', async (_, playlist) => {
   return true;
 });
 
-
 ipcMain.handle('playlists:import', async () => {
   const { filePaths, canceled } = await dialog.showOpenDialog({
     title: "Import Playlist",
@@ -169,19 +176,6 @@ ipcMain.handle('playlists:import', async () => {
   await fs.promises.writeFile(playlistsPath, JSON.stringify(list, null, 2), 'utf8');
 
   return playlist;
-});
-
-ipcMain.handle('file:readDataUrl', async (_event, filePath: string) => {
-  try {
-    if (!filePath) return null;
-    const data = await fs.promises.readFile(filePath);
-    const b64 = data.toString('base64');
-    console.debug('[main] readDataUrl length=', b64.length, 'for', filePath);
-    return `data:audio/*;base64,${b64}`;
-  } catch (err) {
-    console.error('Error reading file for data URL', filePath, err);
-    return null;
-  }
 });
 
 ipcMain.on('play-track', (_event, { queue, index }) => {

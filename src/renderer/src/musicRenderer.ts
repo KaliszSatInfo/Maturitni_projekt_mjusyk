@@ -23,6 +23,7 @@ const currentTimeEl = document.getElementById("current-time")!;
 const totalTimeEl = document.getElementById("total-time")!;
 const progressBar = document.getElementById("progress-bar") as HTMLInputElement;
 const volumeSlider = document.getElementById("volume-slider") as HTMLInputElement;
+const placeholder = '../assets/placeholder.png';
 
 if (window.api && typeof window.api.onLoadQueue === 'function') {
   window.api.onLoadQueue((data: { queue: string[]; index: number }) => {
@@ -66,7 +67,7 @@ async function playCurrent() {
 
   titleEl.textContent = metadata.title || file.split(/[/\\]/).pop()!;
   artistEl.textContent = metadata.artist || "Unknown Artist";
-  art.src = artData || "./assets/placeholder.png";
+  art.src = artData || placeholder;
   
   if (howl) {
     howl.unload();
@@ -282,23 +283,6 @@ playToggleBtn?.addEventListener('click', async () => {
   }
 });
 
-
-if (shuffleBtn) {
-  shuffleBtn.addEventListener('click', () => {
-    shuffleMode = !shuffleMode;
-    if (shuffleMode) shuffleBtn.classList.add('active');
-    else shuffleBtn.classList.remove('active');
-  });
-}
-
-if (loopBtn) {
-  loopBtn.addEventListener('click', () => {
-    loopMode = !loopMode;
-    if (loopMode) loopBtn.classList.add('active');
-    else loopBtn.classList.remove('active');
-  });
-}
-
 nextBtn?.addEventListener('click', () => { playNext(); });
 prevBtn?.addEventListener('click', () => { playPrev(); });
 
@@ -349,3 +333,56 @@ function playPrev() {
     } catch (e) {}
   }
 }
+
+(async function loadSettings() {
+  try {
+    const settings = await window.api.loadSettings();
+    if (!settings) return;
+
+    if (typeof settings.volume === 'number') {
+      volumeSlider.value = settings.volume.toString();
+      Howler.volume(mapSliderToVolume(settings.volume));
+    }
+
+    loopMode = !!settings.loop;
+    loopBtn?.classList.toggle('active', loopMode);
+
+    shuffleMode = !!settings.shuffle;
+    shuffleBtn?.classList.toggle('active', shuffleMode);
+
+  } catch (e) {
+    console.error("Failed to load settings", e);
+  }
+})();
+
+async function saveSettingsState() {
+  try {
+    const s = await window.api.loadSettings() || {};
+    s.volume = Number(volumeSlider.value);
+    s.loop = loopMode;
+    s.shuffle = shuffleMode;
+    await window.api.saveSettings(s);
+  } catch (e) {
+    console.error("Failed to save settings", e);
+  }
+}
+
+volumeSlider.addEventListener("input", async () => {
+  const sliderVal = Number(volumeSlider.value);
+  const mapped = mapSliderToVolume(sliderVal);
+  Howler.volume(mapped);
+  if (fallbackAudio) try { fallbackAudio.volume = mapped; } catch {}
+  await saveSettingsState();
+});
+
+loopBtn?.addEventListener('click', async () => {
+  loopMode = !loopMode;
+  loopBtn?.classList.toggle('active', loopMode);
+  await saveSettingsState();
+});
+
+shuffleBtn?.addEventListener('click', async () => {
+  shuffleMode = !shuffleMode;
+  shuffleBtn?.classList.toggle('active', shuffleMode);
+  await saveSettingsState();
+});
