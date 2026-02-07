@@ -7,13 +7,8 @@ export async function showStatsModal() {
     const playCounts: Record<string, number> = settings.playCounts || {};
     const artistCounts: Record<string, number> = settings.artistCounts || {};
 
-    const topSongs = Object.entries(playCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 50);
-
-    const topArtists = Object.entries(artistCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 50);
+    const topSongs = Object.entries(playCounts).sort((a, b) => b[1] - a[1]);
+    const topArtists = Object.entries(artistCounts).sort((a, b) => b[1] - a[1]);
 
     const modal = document.createElement('div');
     modal.id = 'stats-modal';
@@ -24,40 +19,64 @@ export async function showStatsModal() {
           <div class="stats-section">
             <h4>Top Songs</h4>
             <ul id="top-songs" class="stats-list"></ul>
+            <button id="songs-show-more" class="stats-play-btn">Show More</button>
           </div>
           <div class="stats-section">
             <h4>Top Artists</h4>
             <ul id="top-artists" class="stats-list"></ul>
+            <button id="artists-show-more" class="stats-play-btn">Show More</button>
           </div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
-          <button id="stats-close">Close</button>
+        <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+          <button id="stats-close" class="stats-play-btn">Close</button>
         </div>
       </div>
     `;
 
     document.body.appendChild(modal);
 
-    const topSongsEl = modal.querySelector('#top-songs')!;
-    const topArtistsEl = modal.querySelector('#top-artists')!;
+    // Type assertions
+    const topSongsEl = modal.querySelector('#top-songs') as HTMLElement;
+    const topArtistsEl = modal.querySelector('#top-artists') as HTMLElement;
+    const songsShowMoreBtn = modal.querySelector('#songs-show-more') as HTMLElement;
+    const artistsShowMoreBtn = modal.querySelector('#artists-show-more') as HTMLElement;
+    const closeBtn = modal.querySelector('#stats-close') as HTMLElement;
 
-    topSongs.forEach(([path, cnt]) => {
-      const li = document.createElement('li');
-      li.textContent = `${path.split(/[/\\]/).pop() || path} — ${cnt}`;
-      topSongsEl.appendChild(li);
+    const renderList = (listEl: HTMLElement, items: [string, number][], limit = 5) => {
+      listEl.innerHTML = '';
+      items.forEach(([name, count], idx) => {
+        const li = document.createElement('li');
+        li.textContent = `${name.split(/[/\\]/).pop() || name} — ${count}`;
+        li.style.display = idx < limit ? 'list-item' : 'none';
+        listEl.appendChild(li);
+      });
+    };
+
+    renderList(topSongsEl, topSongs, 5);
+    renderList(topArtistsEl, topArtists, 5);
+
+    let songsExpanded = false;
+    songsShowMoreBtn.addEventListener('click', () => {
+      songsExpanded = !songsExpanded;
+      Array.from(topSongsEl.children).forEach((el, idx) => {
+        (el as HTMLElement).style.display = songsExpanded ? 'list-item' : (idx < 5 ? 'list-item' : 'none');
+      });
+      songsShowMoreBtn.textContent = songsExpanded ? 'Show Less' : 'Show More';
     });
 
-    topArtists.forEach(([artist, cnt]) => {
-      const li = document.createElement('li');
-      li.textContent = `${artist} — ${cnt}`;
-      topArtistsEl.appendChild(li);
+    let artistsExpanded = false;
+    artistsShowMoreBtn.addEventListener('click', () => {
+      artistsExpanded = !artistsExpanded;
+      Array.from(topArtistsEl.children).forEach((el, idx) => {
+        (el as HTMLElement).style.display = artistsExpanded ? 'list-item' : (idx < 5 ? 'list-item' : 'none');
+      });
+      artistsShowMoreBtn.textContent = artistsExpanded ? 'Show Less' : 'Show More';
     });
 
-    modal.querySelector('#stats-close')?.addEventListener('click', () => {
-      modal.remove();
-    });
+    closeBtn.addEventListener('click', () => modal.remove());
 
     modal.style.display = 'flex';
+
   } catch (e) {
     console.error('Failed to open stats modal', e);
     alert('Failed to load stats');
