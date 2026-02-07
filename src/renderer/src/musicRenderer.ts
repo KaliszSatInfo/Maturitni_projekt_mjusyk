@@ -1,10 +1,11 @@
 import { Howl, Howler } from "howler";
 
 let howl: Howl | null = null;
-let queue: string[] = [];
-let index: number = 0;
 let fallbackAudio: HTMLAudioElement | null = null;
 let currentObjectUrl: string | null = null;
+
+let queue: string[] = [];
+let index = 0;
 
 let isPlaying = false;
 let loopMode = false;
@@ -25,364 +26,151 @@ const progressBar = document.getElementById("progress-bar") as HTMLInputElement;
 const volumeSlider = document.getElementById("volume-slider") as HTMLInputElement;
 const placeholder = '../assets/placeholder.png';
 
-if (window.api && typeof window.api.onLoadQueue === 'function') {
-  window.api.onLoadQueue((data: { queue: string[]; index: number }) => {
-    if (!data) return;
-    queue = data.queue || [];
-    index = typeof data.index === 'number' ? data.index : 0;
-    window.api.setQueue(queue);
-    window.api.setIndex(index);
-    playCurrent();
-  });
-}
-
-async function recordPlay(filePath: string) {
-  try {
-    const s = await window.api.loadSettings();
-    const settings = s || {};
-    settings.playCounts = settings.playCounts || {};
-    settings.playCounts[filePath] = (settings.playCounts[filePath] || 0) + 1;
-    settings.artistCounts = settings.artistCounts || {};
-    try {
-      const m = await window.api.getMetadata(filePath);
-      const artistName = (m && m.artist) ? m.artist : 'Unknown Artist';
-      settings.artistCounts[artistName] = (settings.artistCounts[artistName] || 0) + 1;
-    } catch (e) {
-      settings.artistCounts['Unknown Artist'] = (settings.artistCounts['Unknown Artist'] || 0) + 1;
-    }
-    await window.api.saveSettings(settings);
-  } catch (e) {
-  }
-}
-
-async function playCurrent() {
-  queue = await window.api.getQueue();
-  index = await window.api.getCurrentIndex();
-
-  const file = queue[index];
-  if (!file) return;
-
-  const metadata = await window.api.getMetadata(file);
-  const artData = await window.api.getAlbumArt(file);
-
-  titleEl.textContent = metadata.title || file.split(/[/\\]/).pop()!;
-  artistEl.textContent = metadata.artist || "Unknown Artist";
-  art.src = artData || placeholder;
-  
-  if (howl) {
-    howl.unload();
-    howl = null;
-    try { if (progressRaf !== null) cancelAnimationFrame(progressRaf); } catch {}
-    progressRaf = null;
-  }
-
-  let srcUrl: string | null = null;
-  try {
-    srcUrl = await window.api.readFileDataUrl(file);
-  } catch (e) {
-    srcUrl = null;
-  }
-
-  if (!srcUrl) {
-    const toFileUrl = (p: string) => {
-      if (!p) return p;
-      let urlPath = p.replace(/\\/g, '/');
-      if (!urlPath.startsWith('/')) urlPath = '/' + urlPath;
-      return encodeURI('file://' + urlPath);
-    };
-    srcUrl = toFileUrl(file);
-  }
-
-  if (fallbackAudio) {
-    try { fallbackAudio.pause(); fallbackAudio.src = ''; } catch {};
-    fallbackAudio = null;
-  }
-
-  if (currentObjectUrl) {
-    try { URL.revokeObjectURL(currentObjectUrl); } catch {}
-    currentObjectUrl = null;
-  }
-
-  let srcForHowl = srcUrl as string | null;
-  if (srcUrl && srcUrl.startsWith('data:')) {
-    try {
-      const matches = srcUrl.match(/^data:([^;]+);base64,(.*)$/);
-      if (matches) {
-        const mime = matches[1];
-        const b64 = matches[2];
-        const binary = atob(b64);
-        const len = binary.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
-        const blob = new Blob([bytes], { type: mime });
-        currentObjectUrl = URL.createObjectURL(blob);
-        srcForHowl = currentObjectUrl;
-      }
-    } catch (e) {
-    }
-  }
-
-  try {
-    howl = new Howl({
-      src: [srcForHowl || ''],
-      html5: true,
-      onplay: () => {
-        isPlaying = true;
-        if (playToggleBtn) playToggleBtn.textContent = '⏸';
-        updateProgress();
-        if (progressRaf === null) {
-          const loop = () => { updateProgress(); progressRaf = requestAnimationFrame(loop); };
-          progressRaf = requestAnimationFrame(loop);
-        }
-      },
-      onpause: () => {
-        isPlaying = false;
-        if (playToggleBtn) playToggleBtn.textContent = '▶️';
-        if (progressRaf !== null) { cancelAnimationFrame(progressRaf); progressRaf = null; }
-      },
-      onload: () => {
-        const duration = howl!.duration();
-        totalTimeEl.textContent = formatTime(duration);
-      },
-      onend: () => {
-        try { recordPlay(file).catch(()=>{}); } catch {}
-        if (loopMode) {
-          playCurrent();
-        } else {
-          playNext();
-        }
-      },
-    });
-
-    howl.play();
-  } catch (err) {
-    try {
-      const a = new Audio(srcUrl || '');
-      try { a.volume = mapSliderToVolume(Number(volumeSlider.value)); } catch {}
-      fallbackAudio = a;
-      a.addEventListener('loadedmetadata', () => {
-        totalTimeEl.textContent = formatTime(a.duration || 0);
-        updateProgress();
-      });
-      a.addEventListener('timeupdate', () => {
-        currentTimeEl.textContent = formatTime(a.currentTime || 0);
-        if (a.duration) progressBar.value = ((a.currentTime / a.duration) * 100).toString();
-      });
-      a.addEventListener('ended', () => {
-        try { recordPlay(file).catch(()=>{}); } catch {}
-        if (loopMode) {
-          playCurrent();
-        } else {
-          playNext();
-        }
-      });
-      a.addEventListener('play', () => {
-        isPlaying = true;
-        if (playToggleBtn) playToggleBtn.textContent = '⏸';
-        if (progressRaf === null) {
-          const loop = () => { updateProgress(); progressRaf = requestAnimationFrame(loop); };
-          progressRaf = requestAnimationFrame(loop);
-        }
-      });
-      a.addEventListener('pause', () => {
-        isPlaying = false;
-        if (playToggleBtn) playToggleBtn.textContent = '▶️';
-        if (progressRaf !== null) { cancelAnimationFrame(progressRaf); progressRaf = null; }
-      });
-      a.play();
-    } catch (e) {
-    }
-  }
-}
-
 function formatTime(sec: number) {
   const m = Math.floor(sec / 60);
   const s = Math.floor(sec % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
 }
 
-function updateProgress() {
-  if (howl) {
-    try {
-      const seek = howl.seek() as number;
-      const duration = howl.duration() || 0;
-      progressBar.value = duration > 0 ? ((seek / duration) * 100).toString() : '0';
-      currentTimeEl.textContent = formatTime(seek);
-      totalTimeEl.textContent = formatTime(duration);
-      
-    } catch (e) {
-    }
-    return;
-  }
-  if (fallbackAudio) {
-    const a = fallbackAudio;
-    currentTimeEl.textContent = formatTime(a.currentTime || 0);
-      if (a.duration) {
-      progressBar.value = ((a.currentTime / a.duration) * 100).toString();
-    }
-    totalTimeEl.textContent = formatTime(a.duration || 0);
-  }
-}
-
-progressBar.addEventListener("input", () => {
-  const pct = Number(progressBar.value) / 100;
-  if (howl) {
-    try { howl.seek(howl.duration() * pct); } catch {}
-  } else if (fallbackAudio) {
-    const a = fallbackAudio;
-    if (a.duration) a.currentTime = a.duration * pct;
-  }
-  try { updateProgress(); } catch {}
-});
-
 function mapSliderToVolume(s: number) {
   const clamped = Math.max(0, Math.min(1, s));
   return Math.pow(clamped, 2) * 0.45;
 }
 
-volumeSlider.addEventListener("input", () => {
-  const sliderVal = Number(volumeSlider.value);
-  const mapped = mapSliderToVolume(sliderVal);
-  Howler.volume(mapped);
-  if (fallbackAudio) try { fallbackAudio.volume = mapped; } catch {}
-});
+function updateProgress() {
+  let current = 0, duration = 0;
+  if (howl) { try { current = howl.seek() as number; duration = howl.duration() || 0; } catch {} }
+  else if (fallbackAudio) { current = fallbackAudio.currentTime || 0; duration = fallbackAudio.duration || 0; }
 
-Howler.volume(mapSliderToVolume(Number(volumeSlider.value)));
+  currentTimeEl.textContent = formatTime(current);
+  totalTimeEl.textContent = formatTime(duration);
+  progressBar.value = duration > 0 ? ((current / duration) * 100).toString() : "0";
 
-function isPlayingNow() {
-  try {
-    if (howl) {
-      const playing = howl.playing();
-      return typeof playing === 'boolean' ? playing : !!playing;
-    }
-    if (fallbackAudio) return !fallbackAudio.paused;
-  } catch (e) {
+  if (isPlaying && progressRaf === null) {
+    const loop = () => { updateProgress(); progressRaf = requestAnimationFrame(loop); };
+    progressRaf = requestAnimationFrame(loop);
   }
-  return isPlaying;
 }
 
+async function playFile(file: string) {
+  if (howl) { howl.unload(); howl = null; }
+  if (fallbackAudio) { fallbackAudio.pause(); fallbackAudio.src = ''; fallbackAudio = null; }
+  if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
+  if (progressRaf !== null) { cancelAnimationFrame(progressRaf); progressRaf = null; }
 
-playToggleBtn?.addEventListener('click', async () => {
-  const nowPlaying = isPlayingNow();
+  const metadata = await window.api.getMetadata(file);
+  const artData = await window.api.getAlbumArt(file);
+  titleEl.textContent = metadata.title || file.split(/[/\\]/).pop()!;
+  artistEl.textContent = metadata.artist || "Unknown Artist";
+  art.src = artData || placeholder;
+
+  let fileUrl = file.replace(/\\/g, '/');
+  if (!fileUrl.startsWith('/')) fileUrl = '/' + fileUrl;
+  fileUrl = encodeURI('file://' + fileUrl);
+
   try {
-    if (nowPlaying) {
-      try { howl?.pause(); } catch {}
-      if (fallbackAudio) try { fallbackAudio.pause(); } catch {};
-      isPlaying = false;
-      playToggleBtn.textContent = '▶️';
-    } else {
-      if (howl) {
-        try { howl.play(); } catch (e) { await playCurrent(); }
-      } else if (fallbackAudio) {
-        try { await fallbackAudio.play(); } catch (e) { await playCurrent(); }
-      } else {
-        await playCurrent();
-      }
-    }
-  } catch (e) {
-  }
-});
+    howl = new Howl({
+      src: [fileUrl],
+      html5: true,
+      onplay: () => { isPlaying = true; playToggleBtn && (playToggleBtn.textContent = '⏸'); updateProgress(); },
+      onpause: () => { isPlaying = false; playToggleBtn && (playToggleBtn.textContent = '▶️'); },
+      onend: () => { recordPlay(file); loopMode ? playCurrent() : playNext(); },
+      onload: () => { totalTimeEl.textContent = formatTime(howl!.duration()); }
+    });
+    howl.play();
+    return;
+  } catch {}
 
-nextBtn?.addEventListener('click', () => { playNext(); });
-prevBtn?.addEventListener('click', () => { playPrev(); });
+  fallbackAudio = new Audio(fileUrl);
+  fallbackAudio.volume = mapSliderToVolume(Number(volumeSlider.value));
+  fallbackAudio.play();
+  fallbackAudio.addEventListener('timeupdate', updateProgress);
+  fallbackAudio.addEventListener('ended', () => { recordPlay(file); loopMode ? playCurrent() : playNext(); });
+}
+
+async function playCurrent() {
+  queue = await window.api.getQueue();
+  index = await window.api.getCurrentIndex();
+  const file = queue[index];
+  if (file) playFile(file);
+}
 
 function playNext() {
-  if (!queue || queue.length === 0) return;
-  if (shuffleMode) {
-    const next = Math.floor(Math.random() * queue.length);
-    index = next;
-    window.api.setIndex(index);
-    playCurrent();
-    return;
-  }
-
-  if (index < queue.length - 1) {
-    index++;
-    window.api.setIndex(index);
-    playCurrent();
-  } else {
-    try { if (howl) { howl.stop(); howl.unload(); howl = null; } } catch {}
-    try { if (fallbackAudio) { fallbackAudio.pause(); fallbackAudio.src = ''; fallbackAudio = null; } } catch {}
-    isPlaying = false;
-    playToggleBtn!.textContent = '▶️';
-  }
+  if (!queue.length) return;
+  if (shuffleMode) index = Math.floor(Math.random() * queue.length);
+  else index = (index < queue.length - 1) ? index + 1 : index;
+  window.api.setIndex(index);
+  playCurrent();
 }
 
 function playPrev() {
-  if (!queue || queue.length === 0) return;
-  if (shuffleMode) {
-    const prev = Math.floor(Math.random() * queue.length);
-    index = prev;
-    window.api.setIndex(index);
-    playCurrent();
-    return;
-  }
-
-  if (index > 0) {
-    index--;
-    window.api.setIndex(index);
-    playCurrent();
-  } else {
-    try {
-      if (howl) {
-        try { howl.seek(0); } catch {}
-      } else if (fallbackAudio) {
-        try { fallbackAudio.currentTime = 0; } catch {}
-      }
-      updateProgress();
-    } catch (e) {}
-  }
+  if (!queue.length) return;
+  if (shuffleMode) index = Math.floor(Math.random() * queue.length);
+  else index = (index > 0) ? index - 1 : 0;
+  window.api.setIndex(index);
+  playCurrent();
 }
 
-(async function loadSettings() {
+async function recordPlay(file: string) {
   try {
-    const settings = await window.api.loadSettings();
-    if (!settings) return;
+    const settings = await window.api.loadSettings() || {};
+    settings.playCounts = settings.playCounts || {};
+    settings.playCounts[file] = (settings.playCounts[file] || 0) + 1;
 
-    if (typeof settings.volume === 'number') {
-      volumeSlider.value = settings.volume.toString();
-      Howler.volume(mapSliderToVolume(settings.volume));
-    }
+    const metadata = await window.api.getMetadata(file);
+    const artist = metadata.artist || 'Unknown Artist';
+    settings.artistCounts = settings.artistCounts || {};
+    settings.artistCounts[artist] = (settings.artistCounts[artist] || 0) + 1;
 
-    loopMode = !!settings.loop;
-    loopBtn?.classList.toggle('active', loopMode);
-
-    shuffleMode = !!settings.shuffle;
-    shuffleBtn?.classList.toggle('active', shuffleMode);
-
-  } catch (e) {
-    console.error("Failed to load settings", e);
-  }
-})();
-
-async function saveSettingsState() {
-  try {
-    const s = await window.api.loadSettings() || {};
-    s.volume = Number(volumeSlider.value);
-    s.loop = loopMode;
-    s.shuffle = shuffleMode;
-    await window.api.saveSettings(s);
-  } catch (e) {
-    console.error("Failed to save settings", e);
-  }
+    await window.api.saveSettings(settings);
+  } catch {}
 }
 
-volumeSlider.addEventListener("input", async () => {
-  const sliderVal = Number(volumeSlider.value);
-  const mapped = mapSliderToVolume(sliderVal);
+playToggleBtn?.addEventListener('click', () => { isPlayingNow() ? pause() : playCurrent(); });
+nextBtn?.addEventListener('click', playNext);
+prevBtn?.addEventListener('click', playPrev);
+
+function pause() {
+  if (howl) howl.pause();
+  if (fallbackAudio) fallbackAudio.pause();
+  isPlaying = false;
+  playToggleBtn && (playToggleBtn.textContent = '▶️');
+}
+
+function isPlayingNow() {
+  if (howl) return howl.playing();
+  if (fallbackAudio) return !fallbackAudio.paused;
+  return isPlaying;
+}
+
+progressBar.addEventListener('input', () => {
+  const pct = Number(progressBar.value) / 100;
+  if (howl) howl.seek(howl.duration() * pct);
+  else if (fallbackAudio && fallbackAudio.duration) fallbackAudio.currentTime = fallbackAudio.duration * pct;
+  updateProgress();
+});
+
+volumeSlider.addEventListener('input', () => {
+  const mapped = mapSliderToVolume(Number(volumeSlider.value));
   Howler.volume(mapped);
-  if (fallbackAudio) try { fallbackAudio.volume = mapped; } catch {}
-  await saveSettingsState();
+  if (fallbackAudio) fallbackAudio.volume = mapped;
 });
 
-loopBtn?.addEventListener('click', async () => {
-  loopMode = !loopMode;
+loopBtn?.addEventListener('click', () => { loopMode = !loopMode; loopBtn.classList.toggle('active', loopMode); });
+shuffleBtn?.addEventListener('click', () => { shuffleMode = !shuffleMode; shuffleBtn.classList.toggle('active', shuffleMode); });
+
+(async function init() {
+  const settings = await window.api.loadSettings() || {};
+  if (settings.volume !== undefined) volumeSlider.value = settings.volume.toString();
+  Howler.volume(mapSliderToVolume(Number(volumeSlider.value)));
+
+  loopMode = !!settings.loop;
   loopBtn?.classList.toggle('active', loopMode);
-  await saveSettingsState();
-});
 
-shuffleBtn?.addEventListener('click', async () => {
-  shuffleMode = !shuffleMode;
+  shuffleMode = !!settings.shuffle;
   shuffleBtn?.classList.toggle('active', shuffleMode);
-  await saveSettingsState();
-});
+
+  window.api.onLoadQueue?.(({ queue: q, index: i }) => {
+    queue = q; index = i; window.api.setQueue(queue); window.api.setIndex(index); playCurrent();
+  });
+})();

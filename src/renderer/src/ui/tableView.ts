@@ -1,9 +1,12 @@
-import { reorderMetadataField, saveSettingsState } from '../state/settings';
+import { CachedSong } from '../state/cache';
+import { reorderMetadataField, saveSettingsState, formatDuration } from '../state/settings';
+
+const placeholder = '../assets/placeholder.png';
 
 export function renderTableView(
   gridContainer: HTMLElement,
   files: string[],
-  rows: HTMLTableRowElement[],
+  songCache: Record<string, CachedSong>,
   visibleMetadata: Set<string>,
   onPlay: (files: string[], index: number) => void,
   onContextMenu: (x: number, y: number, filePath: string) => void,
@@ -14,7 +17,7 @@ export function renderTableView(
 
   const table = document.createElement('table');
   const thead = document.createElement('thead');
-  const tr = document.createElement('tr');
+  const headerRow = document.createElement('tr');
 
   let draggedField: string | null = null;
 
@@ -35,13 +38,16 @@ export function renderTableView(
     saveSettingsState();
 
     draggedField = null;
-
     if (onReorder) onReorder();
   }
 
   visibleMetadata.forEach(field => {
     const th = document.createElement('th');
-    th.textContent = field === 'art' ? 'Art' : field.charAt(0).toUpperCase() + field.slice(1);
+    th.textContent =
+      field === 'art'
+        ? 'Art'
+        : field.charAt(0).toUpperCase() + field.slice(1);
+
     th.dataset.field = field;
     th.draggable = true;
 
@@ -49,20 +55,56 @@ export function renderTableView(
     th.addEventListener('dragover', onColumnDragOver);
     th.addEventListener('drop', onColumnDrop);
 
-    tr.appendChild(th);
+    headerRow.appendChild(th);
   });
 
-  thead.appendChild(tr);
+  thead.appendChild(headerRow);
   table.appendChild(thead);
 
   const tbody = document.createElement('tbody');
-  rows.forEach((r, idx) => {
-    r.addEventListener('contextmenu', e => {
-      e.preventDefault();
-      onContextMenu(e.pageX, e.pageY, files[idx]);
+
+  files.forEach((filePath, idx) => {
+    const cached = songCache[filePath];
+    const tr = document.createElement('tr');
+
+    visibleMetadata.forEach(field => {
+      const td = document.createElement('td');
+
+      if (field === 'art') {
+        const img = document.createElement('img');
+        img.src = cached?.albumArt || placeholder;
+        img.className = 'album-art';
+        td.appendChild(img);
+
+      } else if (field === 'title') {
+        const fileName = filePath.split(/[/\\]/).pop() || '';
+        const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+
+        td.textContent =
+          cached?.metadata.title && cached.metadata.title.trim() !== ''
+            ? cached.metadata.title
+            : nameWithoutExt;
+
+      } else if (field === 'duration') {
+        td.textContent = cached?.metadata.duration
+          ? formatDuration(cached.metadata.duration)
+          : '';
+
+      } else {
+        td.textContent = cached?.metadata[field] ?? '';
+      }
+
+      tr.appendChild(td);
     });
-    r.addEventListener('dblclick', () => onPlay(files, idx));
-    tbody.appendChild(r);
+
+    tr.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      onContextMenu(e.pageX, e.pageY, filePath);
+    });
+
+    tr.addEventListener('dblclick', () => onPlay(files, idx));
+
+    tbody.appendChild(tr);
   });
 
   table.appendChild(tbody);

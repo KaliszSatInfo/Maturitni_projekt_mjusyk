@@ -15,14 +15,20 @@ export function renderGridView(
 
   for (const filePath of files) {
     const fileName = filePath.split(/[/\\]/).pop()!;
+    const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
     const cached = songCache[filePath];
+
+    const displayTitle =
+      cached?.metadata.title && cached.metadata.title.trim() !== ''
+        ? cached.metadata.title
+        : nameWithoutExt;
 
     const card = document.createElement('div');
     card.className = 'file-card';
 
     card.innerHTML = `
       <img src="${cached?.albumArt || placeholder}" class="album-art">
-      <div class="file-label">${cached?.metadata.title || fileName}</div>
+      <div class="file-label">${displayTitle}</div>
     `;
 
     card.addEventListener('dblclick', () => {
