@@ -7,6 +7,7 @@ let currentObjectUrl: string | null = null;
 let queue: string[] = [];
 let index = 0;
 
+let hasLoadedTrack = false;
 let isPlaying = false;
 let loopMode = false;
 let shuffleMode = false;
@@ -78,12 +79,14 @@ async function playFile(file: string) {
       onload: () => { totalTimeEl.textContent = formatTime(howl!.duration()); }
     });
     howl.play();
+  hasLoadedTrack = true;
     return;
   } catch {}
 
   fallbackAudio = new Audio(fileUrl);
   fallbackAudio.volume = mapSliderToVolume(Number(volumeSlider.value));
   fallbackAudio.play();
+  hasLoadedTrack = true;
   fallbackAudio.addEventListener('timeupdate', updateProgress);
   fallbackAudio.addEventListener('ended', () => { recordPlay(file); loopMode ? playCurrent() : playNext(); });
 }
@@ -126,7 +129,24 @@ async function recordPlay(file: string) {
   } catch {}
 }
 
-playToggleBtn?.addEventListener('click', () => { isPlayingNow() ? pause() : playCurrent(); });
+playToggleBtn?.addEventListener('click', () => {
+  if (isPlayingNow()) {
+    pause();
+    return;
+  }
+
+  if (hasLoadedTrack) {
+    if (howl) howl.play();
+    else if (fallbackAudio) fallbackAudio.play();
+    isPlaying = true;
+    playToggleBtn && (playToggleBtn.textContent = '⏸');
+    updateProgress();
+    return;
+  }
+
+  playCurrent();
+});
+
 nextBtn?.addEventListener('click', playNext);
 prevBtn?.addEventListener('click', playPrev);
 
