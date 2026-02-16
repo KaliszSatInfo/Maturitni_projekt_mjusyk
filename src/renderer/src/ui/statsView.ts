@@ -35,7 +35,6 @@ export async function showStatsModal() {
 
     document.body.appendChild(modal);
 
-    // Type assertions
     const topSongsEl = modal.querySelector('#top-songs') as HTMLElement;
     const topArtistsEl = modal.querySelector('#top-artists') as HTMLElement;
     const songsShowMoreBtn = modal.querySelector('#songs-show-more') as HTMLElement;

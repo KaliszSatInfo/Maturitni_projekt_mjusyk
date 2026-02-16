@@ -21,7 +21,7 @@ import {
   isTableView,
   loadSettingsState,
   saveSettingsState,
-  toggleTableView
+  toggleTableView,
 } from './state/settings';
 
 import { songCache, pruneCache } from './state/cache';
@@ -29,6 +29,7 @@ import { renderGridView } from './ui/gridView';
 import { renderTableView } from './ui/tableView';
 import { showSongContextMenu } from './ui/contextMenu';
 import { showStatsModal } from './ui/statsView';
+import { renderMetadataOptions } from './ui/metadaOptions';
 
 // -----------------------------------------------------------------------------------
 // -----------------------------------------------------------------------------------
@@ -47,6 +48,7 @@ const playlistCancelBtn = document.getElementById('playlist-cancel-btn')!;
 const exportPlaylistBtn = document.getElementById('export-playlist')!;
 const importPlaylistBtn = document.getElementById('import-playlist')!;
 const statsBtn = document.getElementById('show-stats')!;
+const metadataOptions = document.getElementById('metadata-options')!;
 
 // -----------------------------------------------------------------------------------
 // Init thingies
@@ -58,6 +60,8 @@ const statsBtn = document.getElementById('show-stats')!;
 
   renderFolderList();
   renderPlaylistList();
+
+  renderMetadataOptions(metadataOptions, loadAllMusic);
 
   toggleBtn.textContent = isTableView ? 'Switch to Grid View' : 'Switch to Table View';
 

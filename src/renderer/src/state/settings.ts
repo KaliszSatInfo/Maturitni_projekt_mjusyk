@@ -1,5 +1,31 @@
+export const metadataFields = [
+  "art",
+  "title",
+  "artist",
+  "album",
+  "genre",
+  "year",
+  "duration",
+  "trackNumber",
+  "diskNumber"
+];
+
 export let visibleMetadata: Set<string> = new Set(['art', 'title']);
 export let isTableView = false;
+
+export let volume = 1.0;
+export let loopEnabled = false;
+export let shuffleEnabled = false;
+
+export let lastPlayback: {
+  queue: string[];
+  index: number;
+  time?: number;
+} | null = null;
+
+export let playCounts: Record<string, number> = {};
+export let artistCounts: Record<string, number> = {};
+
 
 export async function loadSettingsState() {
   const settings = await window.api.loadSettings();
@@ -59,6 +85,7 @@ export function toggleTableView() {
   return isTableView;
 }
 
+
 export function reorderMetadataField(from: string, to: string) {
   const order = Array.from(visibleMetadata);
   const fromIndex = order.indexOf(from);
@@ -73,6 +100,7 @@ export function reorderMetadataField(from: string, to: string) {
   order.forEach(f => visibleMetadata.add(f));
 }
 
+
 export function formatDuration(sec: number | string | null): string {
   if (!sec) return '';
   const s = typeof sec === 'string' ? parseFloat(sec) : sec;
@@ -82,16 +110,3 @@ export function formatDuration(sec: number | string | null): string {
   const r = Math.floor(s % 60);
   return `${m}:${r.toString().padStart(2, '0')}`;
 }
-
-export let volume = 1.0;
-export let loopEnabled = false;
-export let shuffleEnabled = false;
-
-export let lastPlayback: {
-  queue: string[];
-  index: number;
-  time?: number;
-} | null = null;
-
-export let playCounts: Record<string, number> = {};
-export let artistCounts: Record<string, number> = {};
