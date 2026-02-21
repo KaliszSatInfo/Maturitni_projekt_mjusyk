@@ -1,8 +1,13 @@
 import { Howl, Howler } from "howler";
+import { Equalizer } from "./ui/equalizer";
+import { formatDuration } from "./state/settings";
+
+const eqContainer = document.getElementById("equalizer")!;
+const eq = new Equalizer(eqContainer);
+const audioCtx = new AudioContext();
 
 let howl: Howl | null = null;
 let fallbackAudio: HTMLAudioElement | null = null;
-let currentObjectUrl: string | null = null;
 
 let queue: string[] = [];
 let index = 0;
@@ -13,11 +18,12 @@ let loopMode = false;
 let shuffleMode = false;
 let progressRaf: number | null = null;
 
-const playToggleBtn = document.getElementById('play-toggle') as HTMLButtonElement | null;
-const shuffleBtn = document.getElementById('shuffle-btn') as HTMLButtonElement | null;
-const loopBtn = document.getElementById('loop-btn') as HTMLButtonElement | null;
-const prevBtn = document.getElementById('prev-btn') as HTMLButtonElement | null;
-const nextBtn = document.getElementById('next-btn') as HTMLButtonElement | null;
+const playToggleBtn = document.getElementById('play-toggle') as HTMLButtonElement;
+const shuffleBtn = document.getElementById('shuffle-btn') as HTMLButtonElement;
+const loopBtn = document.getElementById('loop-btn') as HTMLButtonElement;
+const prevBtn = document.getElementById('prev-btn') as HTMLButtonElement;
+const nextBtn = document.getElementById('next-btn') as HTMLButtonElement;
+
 const art = document.getElementById("player-art") as HTMLImageElement;
 const titleEl = document.getElementById("track-title")!;
 const artistEl = document.getElementById("track-artist")!;
@@ -27,24 +33,51 @@ const progressBar = document.getElementById("progress-bar") as HTMLInputElement;
 const volumeSlider = document.getElementById("volume-slider") as HTMLInputElement;
 const placeholder = '../assets/placeholder.png';
 
-function formatTime(sec: number) {
-  const m = Math.floor(sec / 60);
-  const s = Math.floor(sec % 60).toString().padStart(2, "0");
-  return `${m}:${s}`;
-}
-
 function mapSliderToVolume(s: number) {
   const clamped = Math.max(0, Math.min(1, s));
   return Math.pow(clamped, 2) * 0.45;
 }
 
+function connectEQToHowl(howl: Howl) {
+  try {
+    const sound = howl._sounds[0];
+    const audioNode = sound._node as HTMLMediaElement;
+
+    const source = audioCtx.createMediaElementSource(audioNode);
+
+    let prev: AudioNode = source;
+    eq.bands.forEach(band => {
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = "peaking";
+      filter.frequency.value = band.frequency;
+      filter.Q.value = 1;
+      filter.gain.value = band.slider ? parseFloat(band.slider.value) : 0;
+      band.node = filter;
+
+      prev.connect(filter);
+      prev = filter;
+    });
+
+    prev.connect(audioCtx.destination);
+
+    if (audioCtx.state === "suspended") audioCtx.resume();
+  } catch (err) {
+    console.warn("EQ connection failed:", err);
+  }
+}
+
 function updateProgress() {
   let current = 0, duration = 0;
-  if (howl) { try { current = howl.seek() as number; duration = howl.duration() || 0; } catch {} }
-  else if (fallbackAudio) { current = fallbackAudio.currentTime || 0; duration = fallbackAudio.duration || 0; }
 
-  currentTimeEl.textContent = formatTime(current);
-  totalTimeEl.textContent = formatTime(duration);
+  if (howl) {
+    try { current = howl.seek() as number; duration = howl.duration() || 0; } catch {}
+  } else if (fallbackAudio) {
+    current = fallbackAudio.currentTime || 0;
+    duration = fallbackAudio.duration || 0;
+  }
+
+  currentTimeEl.textContent = formatDuration(current);
+  totalTimeEl.textContent = formatDuration(duration);
   progressBar.value = duration > 0 ? ((current / duration) * 100).toString() : "0";
 
   if (isPlaying && progressRaf === null) {
@@ -56,7 +89,6 @@ function updateProgress() {
 async function playFile(file: string) {
   if (howl) { howl.unload(); howl = null; }
   if (fallbackAudio) { fallbackAudio.pause(); fallbackAudio.src = ''; fallbackAudio = null; }
-  if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
   if (progressRaf !== null) { cancelAnimationFrame(progressRaf); progressRaf = null; }
 
   const metadata = await window.api.getMetadata(file);
@@ -64,31 +96,32 @@ async function playFile(file: string) {
   titleEl.textContent = metadata.title || file.split(/[/\\]/).pop()!;
   artistEl.textContent = metadata.artist || "Unknown Artist";
   art.src = artData || placeholder;
-
-  let fileUrl = file.replace(/\\/g, '/');
-  if (!fileUrl.startsWith('/')) fileUrl = '/' + fileUrl;
-  fileUrl = encodeURI('file://' + fileUrl);
+  const fileUrl = encodeURI("file://" + file.replace(/\\/g, "/"));
 
   try {
     howl = new Howl({
       src: [fileUrl],
       html5: true,
-      onplay: () => { isPlaying = true; playToggleBtn && (playToggleBtn.textContent = '⏸'); updateProgress(); },
-      onpause: () => { isPlaying = false; playToggleBtn && (playToggleBtn.textContent = '▶️'); },
-      onend: () => { recordPlay(file); loopMode ? playCurrent() : playNext(); },
-      onload: () => { totalTimeEl.textContent = formatTime(howl!.duration()); }
+      onplay: () => {
+        isPlaying = true;
+        playToggleBtn.textContent = "⏸";
+        updateProgress();
+        connectEQToHowl(howl!);
+      },
+      onpause: () => {
+        isPlaying = false;
+        playToggleBtn.textContent = "▶️";
+      },
+      onend: () => {
+        recordPlay(file);
+        loopMode ? playCurrent() : playNext();
+      },
+      onload: () => updateProgress()
     });
-    howl.play();
-  hasLoadedTrack = true;
-    return;
-  } catch {}
 
-  fallbackAudio = new Audio(fileUrl);
-  fallbackAudio.volume = mapSliderToVolume(Number(volumeSlider.value));
-  fallbackAudio.play();
-  hasLoadedTrack = true;
-  fallbackAudio.addEventListener('timeupdate', updateProgress);
-  fallbackAudio.addEventListener('ended', () => { recordPlay(file); loopMode ? playCurrent() : playNext(); });
+    howl.play();
+    hasLoadedTrack = true;
+  } catch {}
 }
 
 async function playCurrent() {
@@ -120,8 +153,7 @@ async function recordPlay(file: string) {
     settings.playCounts = settings.playCounts || {};
     settings.playCounts[file] = (settings.playCounts[file] || 0) + 1;
 
-    const metadata = await window.api.getMetadata(file);
-    const artist = metadata.artist || 'Unknown Artist';
+    const artist = (await window.api.getMetadata(file)).artist || 'Unknown Artist';
     settings.artistCounts = settings.artistCounts || {};
     settings.artistCounts[artist] = (settings.artistCounts[artist] || 0) + 1;
 
@@ -129,44 +161,36 @@ async function recordPlay(file: string) {
   } catch {}
 }
 
-playToggleBtn?.addEventListener('click', () => {
-  if (isPlayingNow()) {
-    pause();
-    return;
-  }
-
-  if (hasLoadedTrack) {
-    if (howl) howl.play();
-    else if (fallbackAudio) fallbackAudio.play();
-    isPlaying = true;
-    playToggleBtn && (playToggleBtn.textContent = '⏸');
-    updateProgress();
-    return;
-  }
-
-  playCurrent();
-});
-
-nextBtn?.addEventListener('click', playNext);
-prevBtn?.addEventListener('click', playPrev);
-
 function pause() {
   if (howl) howl.pause();
   if (fallbackAudio) fallbackAudio.pause();
   isPlaying = false;
-  playToggleBtn && (playToggleBtn.textContent = '▶️');
+  playToggleBtn.textContent = '▶️';
 }
 
-function isPlayingNow() {
+function isPlayingNow(): boolean {
   if (howl) return howl.playing();
   if (fallbackAudio) return !fallbackAudio.paused;
   return isPlaying;
 }
 
+playToggleBtn.addEventListener('click', () => {
+  if (isPlayingNow()) { pause(); return; }
+  if (hasLoadedTrack) {
+    if (howl) howl.play();
+    else if (fallbackAudio) fallbackAudio.play();
+    isPlaying = true;
+    playToggleBtn.textContent = '⏸';
+    updateProgress();
+    return;
+  }
+  playCurrent();
+});
+
 progressBar.addEventListener('input', () => {
   const pct = Number(progressBar.value) / 100;
   if (howl) howl.seek(howl.duration() * pct);
-  else if (fallbackAudio && fallbackAudio.duration) fallbackAudio.currentTime = fallbackAudio.duration * pct;
+  else if (fallbackAudio) fallbackAudio.currentTime = (fallbackAudio.duration || 0) * pct;
   updateProgress();
 });
 
@@ -176,8 +200,18 @@ volumeSlider.addEventListener('input', () => {
   if (fallbackAudio) fallbackAudio.volume = mapped;
 });
 
-loopBtn?.addEventListener('click', () => { loopMode = !loopMode; loopBtn.classList.toggle('active', loopMode); });
-shuffleBtn?.addEventListener('click', () => { shuffleMode = !shuffleMode; shuffleBtn.classList.toggle('active', shuffleMode); });
+loopBtn.addEventListener('click', () => {
+  loopMode = !loopMode;
+  loopBtn.classList.toggle('active', loopMode);
+});
+
+shuffleBtn.addEventListener('click', () => {
+  shuffleMode = !shuffleMode;
+  shuffleBtn.classList.toggle('active', shuffleMode);
+});
+
+prevBtn.addEventListener('click', playPrev);
+nextBtn.addEventListener('click', playNext);
 
 (async function init() {
   const settings = await window.api.loadSettings() || {};
@@ -185,12 +219,16 @@ shuffleBtn?.addEventListener('click', () => { shuffleMode = !shuffleMode; shuffl
   Howler.volume(mapSliderToVolume(Number(volumeSlider.value)));
 
   loopMode = !!settings.loop;
-  loopBtn?.classList.toggle('active', loopMode);
+  loopBtn.classList.toggle('active', loopMode);
 
   shuffleMode = !!settings.shuffle;
-  shuffleBtn?.classList.toggle('active', shuffleMode);
+  shuffleBtn.classList.toggle('active', shuffleMode);
 
   window.api.onLoadQueue?.(({ queue: q, index: i }) => {
-    queue = q; index = i; window.api.setQueue(queue); window.api.setIndex(index); playCurrent();
+    queue = q;
+    index = i;
+    window.api.setQueue(queue);
+    window.api.setIndex(index);
+    playCurrent();
   });
 })();
