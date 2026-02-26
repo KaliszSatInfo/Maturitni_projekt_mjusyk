@@ -1,0 +1,52 @@
+#file-grid.table-view {
+  display: block;
+  padding: 0;
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+}
+
+#file-grid.table-view table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+#file-grid.table-view th,
+#file-grid.table-view td {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 0.82rem;
+  color: #e5e7eb;
+  vertical-align: middle;
+  border-bottom: 1px solid #2b2540;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#file-grid.table-view th {
+  position: sticky;
+  top: 0;
+  background: #1c182b;
+  color: #a78bfa;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 500;
+  z-index: 2;
+  font-weight: bold;
+  cursor: grab;
+  user-select: none;
+}
+
+#file-grid.table-view tr:hover {
+  background: rgba(167, 139, 250, 0.08);
+}
+
+#file-grid.table-view .album-art {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  object-fit: cover;
+}

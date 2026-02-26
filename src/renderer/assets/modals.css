@@ -1,0 +1,122 @@
+#new-playlist-modal,
+#stats-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+#new-playlist-modal > div,
+#stats-modal > div {
+  background: #1c182b;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#playlist-name-input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background: #111;
+  color: white;
+  box-sizing: border-box;
+}
+
+#playlist-create-btn,
+#playlist-cancel-btn,
+#stats-close,
+.stats-play-btn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background: #333;
+  color: white;
+  cursor: pointer;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+#playlist-create-btn:hover,
+#playlist-cancel-btn:hover,
+#stats-close:hover,
+.stats-play-btn:hover {
+  background: #444;
+}
+
+#stats-modal h3,
+#new-playlist-modal h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #a78bfa;
+}
+
+#stats-content {
+  color: #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+.stats-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stats-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.stats-list li {
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stats-list li:last-child {
+  border-bottom: none;
+}
+
+#songs-show-more,
+#artists-show-more {
+  align-self: flex-start;
+}
+
+#stats-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+#stats-content::-webkit-scrollbar-track {
+  background: #1c182b;
+  border-radius: 4px;
+}
+
+#stats-content::-webkit-scrollbar-thumb {
+  background: #7c6cff;
+  border-radius: 4px;
+  border: 2px solid #1c182b;
+}
+
+#stats-content::-webkit-scrollbar-thumb:hover {
+  background: #a78bfa;
+}

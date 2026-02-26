@@ -1,0 +1,58 @@
+#file-grid.grid-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  padding: 12px;
+  box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+}
+
+.file-card {
+  background: #1c182b;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  padding: 6px;
+  width: 100%;
+}
+
+.file-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
+}
+
+.album-art {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* keeps image square */
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.file-label {
+  font-size: 0.78rem;
+  color: #e5e7eb;
+  text-align: center;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+}
+
+#file-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+#file-grid::-webkit-scrollbar-thumb {
+  background: #2b2540;
+  border-radius: 4px;
+}
+
+#file-grid::-webkit-scrollbar-thumb:hover {
+  background: #7c6cff;
+}

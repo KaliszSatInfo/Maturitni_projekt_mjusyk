@@ -79,7 +79,7 @@ function updateProgress() {
   currentTimeEl.textContent = formatDuration(current);
   totalTimeEl.textContent = formatDuration(duration);
   progressBar.value = duration > 0 ? ((current / duration) * 100).toString() : "0";
-
+  
   if (isPlaying && progressRaf === null) {
     const loop = () => { updateProgress(); progressRaf = requestAnimationFrame(loop); };
     progressRaf = requestAnimationFrame(loop);

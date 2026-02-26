@@ -1,0 +1,77 @@
+.equalizer {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.eq-band {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #ddd6ff;
+}
+
+.eq-label {
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #a78bfa;
+  text-align: center;
+}
+
+.eq-slider {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 8px;
+  height: 120px;
+  margin: 8px 0;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  background: #1c182b;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.eq-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #7c6cff;
+  border-radius: 50%;
+  border: 2px solid #a78bfa;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.eq-slider::-webkit-slider-thumb:hover {
+  background: #a78bfa;
+  transform: scale(1.2);
+}
+
+.eq-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #7c6cff;
+  border-radius: 50%;
+  border: 2px solid #a78bfa;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.eq-slider::-moz-range-thumb:hover {
+  background: #a78bfa;
+  transform: scale(1.2);
+}
+
+.eq-freq-label {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  color: #ddd6ff;
+  text-align: center;
+}

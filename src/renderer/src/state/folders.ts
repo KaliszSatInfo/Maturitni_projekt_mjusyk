@@ -33,7 +33,11 @@ export function renderFolders(
   folderPaths.forEach((folder, idx) => {
     const div = document.createElement('div');
     div.className = 'folder-item';
-    div.textContent = folder;
+
+    const folderName = folder.split(/[\\/]/).pop() || folder;
+    div.textContent = folderName;
+
+    div.setAttribute('data-fullpath', folder);
 
     const delBtn = document.createElement('button');
     delBtn.textContent = 'Delete';

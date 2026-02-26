@@ -6,9 +6,6 @@ export type Playlist = {
 export let playlists: Playlist[] = [];
 export let currentPlaylist: Playlist | null = null;
 
-/* ------------------------------------------------------------------ */
-/* Persistence                                                         */
-/* ------------------------------------------------------------------ */
 export async function loadPlaylistsState() {
   playlists = await window.api.loadPlaylists();
   return playlists;
@@ -18,9 +15,6 @@ export async function savePlaylistsState() {
   await window.api.savePlaylists(playlists);
 }
 
-/* ------------------------------------------------------------------ */
-/* State operations                                                    */
-/* ------------------------------------------------------------------ */
 export function createPlaylist(name: string) {
   const pl: Playlist = { name, songPaths: [] };
   playlists.push(pl);
@@ -46,9 +40,6 @@ export function addSongToPlaylist(pl: Playlist, songPath: string) {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Rendering                                                           */
-/* ------------------------------------------------------------------ */
 export function renderPlaylists(
   playlistContainer: HTMLElement,
   onSelect: () => void,

@@ -1,0 +1,135 @@
+#side-panel {
+  background: #151320;
+  border-right: 1px solid #242036;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  box-sizing: border-box;
+  height: 100%;
+}
+
+#side-panel h3 {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #a78bfa;
+  margin: 10px 0 6px 0;
+  font-weight: 500;
+}
+
+#side-panel button {
+  background: #1c182b;
+  border: 1px solid #2b2540;
+  color: #ddd6ff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: background 0.15s ease, border 0.15s ease;
+}
+
+#side-panel button:hover {
+  background: #221d33;
+  border-color: #7c6cff;
+}
+
+.folder-item,
+.playlist-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #e5e7eb;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.folder-item:hover,
+.playlist-item:hover {
+  background: rgba(167, 139, 250, 0.08);
+}
+
+.playlist-item.selected {
+  background: rgba(167, 139, 250, 0.14);
+  color: #ffffff;
+}
+
+.folder-item:hover::after,
+.playlist-item:hover::after {
+  content: attr(data-fullpath);
+  position: absolute;
+  left: 280px;
+  background: #1c182b;
+  color: #ddd6ff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  box-shadow: 0 0 6px rgba(167, 139, 250, 0.2);
+  z-index: 1000;
+}
+
+.metadata-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #d1d5db;
+  cursor: pointer;
+  padding: 4px 2px;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.metadata-option:hover {
+  background: rgba(167, 139, 250, 0.06);
+}
+
+.metadata-option input[type="checkbox"] {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #3a3355;
+  border-radius: 3px;
+  background: #1c182b;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.metadata-option input[type="checkbox"]:checked {
+  background: #7c6cff;
+  border-color: #7c6cff;
+}
+
+.metadata-option input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  width: 3px;
+  height: 6px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+#side-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+#side-panel::-webkit-scrollbar-thumb {
+  background: #2b2540;
+  border-radius: 4px;
+}
+
+#side-panel::-webkit-scrollbar-thumb:hover {
+  background: #3a3355;
+}
