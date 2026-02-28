@@ -110,7 +110,7 @@ async function playFile(file: string) {
       },
       onpause: () => {
         isPlaying = false;
-        playToggleBtn.textContent = "▶️";
+        playToggleBtn.textContent = "▶";
       },
       onend: () => {
         recordPlay(file);
@@ -165,7 +165,7 @@ function pause() {
   if (howl) howl.pause();
   if (fallbackAudio) fallbackAudio.pause();
   isPlaying = false;
-  playToggleBtn.textContent = '▶️';
+  playToggleBtn.textContent = '▶';
 }
 
 function isPlayingNow(): boolean {
