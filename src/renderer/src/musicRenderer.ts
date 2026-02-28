@@ -17,6 +17,7 @@ let isPlaying = false;
 let loopMode = false;
 let shuffleMode = false;
 let progressRaf: number | null = null;
+let playStartTime: number | null = null;
 
 const playToggleBtn = document.getElementById('play-toggle') as HTMLButtonElement;
 const shuffleBtn = document.getElementById('shuffle-btn') as HTMLButtonElement;
@@ -102,18 +103,22 @@ async function playFile(file: string) {
     howl = new Howl({
       src: [fileUrl],
       html5: true,
-      onplay: () => {
+      onplay: async () => {
         isPlaying = true;
         playToggleBtn.textContent = "⏸";
         updateProgress();
         connectEQToHowl(howl!);
+
+        const playlistName = await window.api.getCurrentPlaylist?.();
+        recordPlay(file, playlistName);
       },
       onpause: () => {
         isPlaying = false;
         playToggleBtn.textContent = "▶";
+        recordStop();
       },
       onend: () => {
-        recordPlay(file);
+        recordStop();
         loopMode ? playCurrent() : playNext();
       },
       onload: () => updateProgress()
@@ -132,6 +137,7 @@ async function playCurrent() {
 }
 
 function playNext() {
+  recordStop();
   if (!queue.length) return;
   if (shuffleMode) index = Math.floor(Math.random() * queue.length);
   else index = (index < queue.length - 1) ? index + 1 : index;
@@ -140,6 +146,7 @@ function playNext() {
 }
 
 function playPrev() {
+  recordStop();
   if (!queue.length) return;
   if (shuffleMode) index = Math.floor(Math.random() * queue.length);
   else index = (index > 0) ? index - 1 : 0;
@@ -147,18 +154,59 @@ function playPrev() {
   playCurrent();
 }
 
-async function recordPlay(file: string) {
+async function recordPlay(file: string, playlistName?: string) {
   try {
     const settings = await window.api.loadSettings() || {};
+
     settings.playCounts = settings.playCounts || {};
+    settings.artistCounts = settings.artistCounts || {};
+    settings.playlistCounts = settings.playlistCounts || {};
+    settings.totalListeningTime = settings.totalListeningTime || 0;
+
     settings.playCounts[file] = (settings.playCounts[file] || 0) + 1;
 
-    const artist = (await window.api.getMetadata(file)).artist || 'Unknown Artist';
-    settings.artistCounts = settings.artistCounts || {};
+    const metadata = await window.api.getMetadata(file);
+    const artist = metadata.artist || "Unknown Artist";
     settings.artistCounts[artist] = (settings.artistCounts[artist] || 0) + 1;
 
+    if (playlistName) {
+      settings.playlistCounts[playlistName] =
+        (settings.playlistCounts[playlistName] || 0) + 1;
+    }
+
+    playStartTime = Date.now();
+
     await window.api.saveSettings(settings);
-  } catch {}
+  } catch (err) {
+    console.error("recordPlay error:", err);
+  }
+}
+
+async function recordStop() {
+  try {
+    if (!playStartTime) return;
+
+    const settings = await window.api.loadSettings() || {};
+    settings.totalListeningTime = settings.totalListeningTime || 0;
+
+    let listenedTime = Math.floor((Date.now() - playStartTime) / 1000);
+
+    if (howl) {
+      const duration = Math.floor(howl.duration());
+      if (listenedTime > duration) listenedTime = duration;
+    }
+
+    if (listenedTime < 0 || listenedTime > 60 * 60 * 24) {
+      listenedTime = 0;
+    }
+
+    settings.totalListeningTime += listenedTime;
+    playStartTime = null;
+
+    await window.api.saveSettings(settings);
+  } catch (err) {
+    console.error("recordStop error:", err);
+  }
 }
 
 function pause() {
@@ -166,6 +214,7 @@ function pause() {
   if (fallbackAudio) fallbackAudio.pause();
   isPlaying = false;
   playToggleBtn.textContent = '▶';
+  recordStop();
 }
 
 function isPlayingNow(): boolean {
@@ -224,9 +273,10 @@ nextBtn.addEventListener('click', playNext);
   shuffleMode = !!settings.shuffle;
   shuffleBtn.classList.toggle('active', shuffleMode);
 
-  window.api.onLoadQueue?.(({ queue: q, index: i }) => {
+  window.api.onLoadQueue?.(async ({ queue: q, index: i}) => {
     queue = q;
     index = i;
+
     window.api.setQueue(queue);
     window.api.setIndex(index);
     playCurrent();

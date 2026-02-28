@@ -102,11 +102,20 @@ export function reorderMetadataField(from: string, to: string) {
 
 
 export function formatDuration(sec: number | string | null): string {
-  if (!sec) return '';
-  const s = typeof sec === 'string' ? parseFloat(sec) : sec;
-  if (isNaN(s)) return '';
+  if (sec == null) return '';
 
-  const m = Math.floor(s / 60);
-  const r = Math.floor(s % 60);
-  return `${m}:${r.toString().padStart(2, '0')}`;
+  const s = typeof sec === 'string' ? parseFloat(sec) : sec;
+  if (isNaN(s) || s < 0) return '';
+
+  const hours = Math.floor(s / 3600);
+  const minutes = Math.floor((s % 3600) / 60);
+  const seconds = Math.floor(s % 60);
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds
+      .toString()
+      .padStart(2, '0')}`;
+  }
+
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }

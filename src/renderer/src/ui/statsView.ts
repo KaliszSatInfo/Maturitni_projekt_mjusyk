@@ -1,11 +1,15 @@
+import { formatDuration } from "../state/settings";
+
 export async function showStatsModal() {
   try {
     const existing = document.getElementById('stats-modal');
     if (existing) existing.remove();
 
     const settings = await window.api.loadSettings();
+
     const playCounts: Record<string, number> = settings.playCounts || {};
     const artistCounts: Record<string, number> = settings.artistCounts || {};
+    const totalListeningTime: number = settings.totalListeningTime || 0;
 
     const topSongs = Object.entries(playCounts).sort((a, b) => b[1] - a[1]);
     const topArtists = Object.entries(artistCounts).sort((a, b) => b[1] - a[1]);
@@ -14,19 +18,26 @@ export async function showStatsModal() {
     modal.id = 'stats-modal';
     modal.innerHTML = `
       <div>
-        <h3>Playback Stats</h3>
+        <h3>Playback Statistics</h3>
+
+        <p><strong>Total listening time:</strong> ${formatDuration(totalListeningTime)}</p>
+
         <div id="stats-content">
+
           <div class="stats-section">
             <h4>Top Songs</h4>
             <ul id="top-songs" class="stats-list"></ul>
             <button id="songs-show-more" class="stats-play-btn">Show More</button>
           </div>
+
           <div class="stats-section">
             <h4>Top Artists</h4>
             <ul id="top-artists" class="stats-list"></ul>
             <button id="artists-show-more" class="stats-play-btn">Show More</button>
           </div>
+
         </div>
+
         <div style="display:flex; justify-content:flex-end; margin-top:12px;">
           <button id="stats-close" class="stats-play-btn">Close</button>
         </div>
@@ -37,8 +48,10 @@ export async function showStatsModal() {
 
     const topSongsEl = modal.querySelector('#top-songs') as HTMLElement;
     const topArtistsEl = modal.querySelector('#top-artists') as HTMLElement;
+
     const songsShowMoreBtn = modal.querySelector('#songs-show-more') as HTMLElement;
     const artistsShowMoreBtn = modal.querySelector('#artists-show-more') as HTMLElement;
+
     const closeBtn = modal.querySelector('#stats-close') as HTMLElement;
 
     const renderList = (listEl: HTMLElement, items: [string, number][], limit = 5) => {
