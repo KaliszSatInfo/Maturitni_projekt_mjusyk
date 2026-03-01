@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { ipcMain, BrowserWindow } from "electron";
 
 let queue: string[] = [];
 let index: number = 0;
@@ -32,3 +32,16 @@ ipcMain.handle("music:setIndex", (_event, newIndex: number) => {
 });
 
 ipcMain.handle("music:getCurrentIndex", () => index);
+
+ipcMain.on('play-track', (_event, { queue, index }) => {
+  try {
+    setQueueLocal(queue || []);
+    setIndexLocal(typeof index === 'number' ? index : 0);
+    const win = BrowserWindow.getAllWindows()[0];
+    if (win) {
+      win.webContents.send('load-queue', { queue, index });
+    }
+  } catch (err) {
+    console.error('Error handling play-track', err);
+  }
+});

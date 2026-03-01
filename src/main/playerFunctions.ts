@@ -1,8 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import musicMetadata from 'music-metadata';
-import { app, ipcMain, dialog, BrowserWindow } from 'electron';
-import { setQueueLocal, setIndexLocal } from './musicFunctions';
+import { app, ipcMain, dialog } from 'electron';
 
 const configPath = path.join(app.getPath('userData'), 'config.json');
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
@@ -178,15 +177,3 @@ ipcMain.handle('playlists:import', async () => {
   return playlist;
 });
 
-ipcMain.on('play-track', (_event, { queue, index }) => {
-  try {
-    setQueueLocal(queue || []);
-    setIndexLocal(typeof index === 'number' ? index : 0);
-    const win = BrowserWindow.getAllWindows()[0];
-    if (win) {
-      win.webContents.send('load-queue', { queue, index });
-    }
-  } catch (err) {
-    console.error('Error handling play-track', err);
-  }
-});
