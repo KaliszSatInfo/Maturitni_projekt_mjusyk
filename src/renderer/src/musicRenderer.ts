@@ -32,7 +32,10 @@ const currentTimeEl = document.getElementById("current-time")!;
 const totalTimeEl = document.getElementById("total-time")!;
 const progressBar = document.getElementById("progress-bar") as HTMLInputElement;
 const volumeSlider = document.getElementById("volume-slider") as HTMLInputElement;
-const placeholder = '../assets/placeholder.png';
+const placeholder = new URL(
+  "../assets/placeholder.png",
+  import.meta.url
+).href;
 
 function mapSliderToVolume(s: number) {
   const clamped = Math.max(0, Math.min(1, s));

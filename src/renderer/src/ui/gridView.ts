@@ -1,4 +1,8 @@
 import { CachedSong } from '../state/cache';
+const placeholder = new URL(
+  "../../assets/placeholder.png",
+  import.meta.url
+).href;
 
 export function renderGridView(
   gridContainer: HTMLElement,
@@ -25,7 +29,7 @@ export function renderGridView(
     card.className = 'file-card';
 
     card.innerHTML = `
-      <img src="${cached?.albumArt || '../assets/placeholder.png'}" class="album-art">
+      <img src="${cached?.albumArt || placeholder}" class="album-art">
       <div class="file-label">${displayTitle}</div>
     `;
 

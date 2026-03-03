@@ -61,11 +61,4 @@ export class Equalizer {
       this.container.appendChild(wrapper);
     });
   }
-
-  public reset() {
-    this.bands.forEach((band) => {
-      if (band.slider) band.slider.value = "0";
-      if (band.node) band.node.gain.value = 0;
-    });
-  }
 }

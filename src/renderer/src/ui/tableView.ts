@@ -1,7 +1,9 @@
 import { CachedSong } from '../state/cache';
 import { reorderMetadataField, saveSettingsState, formatDuration } from '../state/settings';
-
-const placeholder = '../assets/placeholder.png';
+const placeholder = new URL(
+  "../../assets/placeholder.png",
+  import.meta.url
+).href;
 
 export function renderTableView(
   gridContainer: HTMLElement,
