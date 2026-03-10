@@ -98,7 +98,8 @@
 }
 
 #songs-show-more,
-#artists-show-more {
+#artists-show-more,
+#playlists-show-more {
   align-self: flex-start;
 }
 

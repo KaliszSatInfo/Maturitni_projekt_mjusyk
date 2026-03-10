@@ -1,6 +1,7 @@
 import { Howl, Howler } from "howler";
 import { Equalizer } from "./ui/equalizer";
 import { formatDuration } from "./state/settings";
+import { currentPlaylist } from "./state/playlists";
 
 const eqContainer = document.getElementById("equalizer")!;
 const eq = new Equalizer(eqContainer);
@@ -112,7 +113,7 @@ async function playFile(file: string) {
         updateProgress();
         connectEQToHowl(howl!);
 
-        const playlistName = await window.api.getCurrentPlaylist?.();
+        const playlistName = currentPlaylist?.name;
         recordPlay(file, playlistName);
       },
       onpause: () => {

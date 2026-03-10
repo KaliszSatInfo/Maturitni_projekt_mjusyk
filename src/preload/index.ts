@@ -25,4 +25,5 @@ contextBridge.exposeInMainWorld('api', {
 
   playTrack: (queue: string[], index: number) => ipcRenderer.send("play-track", { queue, index }),
   onLoadQueue: (callback) => ipcRenderer.on("load-queue", (_, data) => callback(data)),
+  onSetCurrentPlaylist: (callback) => ipcRenderer.on("set-current-playlist", (_, data) => callback(data)),
 });

@@ -9,10 +9,12 @@ export async function showStatsModal() {
 
     const playCounts: Record<string, number> = settings.playCounts || {};
     const artistCounts: Record<string, number> = settings.artistCounts || {};
+    const playlistCounts: Record<string, number> = settings.playlistCounts || {};
     const totalListeningTime: number = settings.totalListeningTime || 0;
 
     const topSongs = Object.entries(playCounts).sort((a, b) => b[1] - a[1]);
     const topArtists = Object.entries(artistCounts).sort((a, b) => b[1] - a[1]);
+    const topPlaylists = Object.entries(playlistCounts).sort((a, b) => b[1] - a[1]);
 
     const modal = document.createElement('div');
     modal.id = 'stats-modal';
@@ -36,6 +38,12 @@ export async function showStatsModal() {
             <button id="artists-show-more" class="stats-play-btn">Show More</button>
           </div>
 
+          <div class="stats-section">
+            <h4>Most Listened Playlists</h4>
+            <ul id="top-playlists" class="stats-list"></ul>
+            <button id="playlists-show-more" class="stats-play-btn">Show More</button>
+          </div>
+
         </div>
 
         <div style="display:flex; justify-content:flex-end; margin-top:12px;">
@@ -48,9 +56,11 @@ export async function showStatsModal() {
 
     const topSongsEl = modal.querySelector('#top-songs') as HTMLElement;
     const topArtistsEl = modal.querySelector('#top-artists') as HTMLElement;
+    const topPlaylistsEl = modal.querySelector('#top-playlists') as HTMLElement;
 
     const songsShowMoreBtn = modal.querySelector('#songs-show-more') as HTMLElement;
     const artistsShowMoreBtn = modal.querySelector('#artists-show-more') as HTMLElement;
+    const playlistsShowMoreBtn = modal.querySelector('#playlists-show-more') as HTMLElement;
 
     const closeBtn = modal.querySelector('#stats-close') as HTMLElement;
 
@@ -66,6 +76,7 @@ export async function showStatsModal() {
 
     renderList(topSongsEl, topSongs, 5);
     renderList(topArtistsEl, topArtists, 5);
+    renderList(topPlaylistsEl, topPlaylists, 5);
 
     let songsExpanded = false;
     songsShowMoreBtn.addEventListener('click', () => {
@@ -83,6 +94,15 @@ export async function showStatsModal() {
         (el as HTMLElement).style.display = artistsExpanded ? 'list-item' : (idx < 5 ? 'list-item' : 'none');
       });
       artistsShowMoreBtn.textContent = artistsExpanded ? 'Show Less' : 'Show More';
+    });
+
+    let playlistsExpanded = false;
+    playlistsShowMoreBtn.addEventListener('click', () => {
+      playlistsExpanded = !playlistsExpanded;
+      Array.from(topPlaylistsEl.children).forEach((el, idx) => {
+        (el as HTMLElement).style.display = playlistsExpanded ? 'list-item' : (idx < 5 ? 'list-item' : 'none');
+      });
+      playlistsShowMoreBtn.textContent = playlistsExpanded ? 'Show Less' : 'Show More';
     });
 
     closeBtn.addEventListener('click', () => modal.remove());

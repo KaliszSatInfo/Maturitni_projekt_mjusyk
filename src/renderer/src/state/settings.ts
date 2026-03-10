@@ -25,6 +25,8 @@ export let lastPlayback: {
 
 export let playCounts: Record<string, number> = {};
 export let artistCounts: Record<string, number> = {};
+export let playlistCounts: Record<string, number> = {};
+export let totalListeningTime: number = 0;
 
 
 export async function loadSettingsState() {
@@ -61,6 +63,14 @@ export async function loadSettingsState() {
   if (settings.artistCounts) {
     artistCounts = settings.artistCounts;
   }
+
+  if (settings.playlistCounts) {
+    playlistCounts = settings.playlistCounts;
+  }
+
+  if (typeof settings.totalListeningTime === 'number') {
+    totalListeningTime = settings.totalListeningTime;
+  }
 }
 
 
@@ -75,7 +85,9 @@ export async function saveSettingsState() {
     lastPlayback,
 
     playCounts,
-    artistCounts
+    artistCounts,
+    playlistCounts,
+    totalListeningTime
   });
 }
 

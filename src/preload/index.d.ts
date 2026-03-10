@@ -33,6 +33,7 @@ declare global {
 
       playTrack: (queue: string[], index: number) => void;
       onLoadQueue: (callback: (data: { queue: string[]; index: number }) => void) => void;
+      onSetCurrentPlaylist: (callback: (playlistName: string | null) => void) => void;
     }
   }
 }
