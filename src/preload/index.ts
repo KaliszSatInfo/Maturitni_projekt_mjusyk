@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('api', {
     export: (playlist: any) => ipcRenderer.invoke('playlists:export', playlist),
     import: () => ipcRenderer.invoke('playlists:import')
   },
+  onSetCurrentPlaylist: (callback) => ipcRenderer.on("set-current-playlist", (_, data) => callback(data)),
 
   setQueue: (queue: string[]) => ipcRenderer.invoke("music:setQueue", queue),
   getQueue: () => ipcRenderer.invoke("music:getQueue"),
@@ -25,5 +26,6 @@ contextBridge.exposeInMainWorld('api', {
 
   playTrack: (queue: string[], index: number) => ipcRenderer.send("play-track", { queue, index }),
   onLoadQueue: (callback) => ipcRenderer.on("load-queue", (_, data) => callback(data)),
-  onSetCurrentPlaylist: (callback) => ipcRenderer.on("set-current-playlist", (_, data) => callback(data)),
+  
+  setMiniPlayer: (enable: boolean) => ipcRenderer.invoke('window:setMiniPlayer', enable),
 });

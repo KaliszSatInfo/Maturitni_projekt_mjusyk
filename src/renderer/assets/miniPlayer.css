@@ -1,0 +1,68 @@
+body.mini-player-mode {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+body.mini-player-mode #side-panel,
+body.mini-player-mode #file-grid {
+  display: none;
+}
+
+body.mini-player-mode #player-panel {
+  grid-column: 1;
+  grid-row: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  gap: 12px;
+  border-radius: 0;
+  box-sizing: border-box;
+}
+
+body.mini-player-mode #player-art {
+  width: 100%;
+  max-height: 180px;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+body.mini-player-mode #track-info {
+  text-align: center;
+  gap: 4px;
+}
+
+body.mini-player-mode #track-title {
+  font-size: 1rem;
+  color: #e5e7eb;
+}
+
+body.mini-player-mode #track-artist {
+  font-size: 0.9rem;
+  color: #b0b0f0;
+}
+
+body.mini-player-mode #progress-bar {
+  width: 100%;
+}
+
+body.mini-player-mode #time-display {
+  width: 100%;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+body.mini-player-mode #controls {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+body.mini-player-mode #controls button {
+  font-size: 16px;
+  padding: 4px 8px;
+}

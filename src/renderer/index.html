@@ -16,6 +16,7 @@
     <link href="assets/player.css" type="text/css" rel="stylesheet" />
     <link href="assets/equalizer.css" type="text/css" rel="stylesheet" />
     <link href="assets/loader.css" type="text/css" rel="stylesheet" />
+    <link href="assets/miniPlayer.css" type="text/css" rel="stylesheet" />
   </head>
 
 <body>
@@ -23,6 +24,7 @@
 
     <button id="choose-folder">Select folder</button>
     <button id="toggle-view">Toggle Grid/Table</button>
+    <button id="toggle-mini-player">Mini Player</button>
 
     <h3>Folders</h3>
     <div id="folder-list"></div>
@@ -58,6 +60,7 @@
   </div>
 
   <div id="player-panel">
+  <button id="toggle-mini-player-close" style="display: none; position: absolute; top: 8px; right: 8px; background: none; border: none; color: #b0b0f0; font-size: 20px; cursor: pointer; padding: 4px; z-index: 10001;">✕</button>
   <img id="player-art" src="./assets/placeholder.png" />
   <div id="track-info">
     <div id="track-title">Title</div>

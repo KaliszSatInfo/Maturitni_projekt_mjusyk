@@ -1,13 +1,16 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import './playerFunctions';
 import './musicFunctions';
 
+let mainWindow: BrowserWindow | null = null;
+let previousWindowSize: { width: number; height: number } | null = null;
+
 function createWindow(): void {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
@@ -22,7 +25,7 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+    mainWindow!.show()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -74,3 +77,27 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+// IPC handlers for mini-player mode
+
+ipcMain.handle('window:setMiniPlayer', async (_event, enable: boolean) => {
+  if (!mainWindow) return false;
+  
+  if (enable) {
+    const [width, height] = mainWindow.getSize();
+    previousWindowSize = { width, height };
+    mainWindow.setSize(860, 240);
+    mainWindow.setResizable(true);
+  } else {
+    if (previousWindowSize) {
+      mainWindow.setSize(previousWindowSize.width, previousWindowSize.height);
+      previousWindowSize = null;
+    }
+  }
+  
+  return true;
+});
+
+ipcMain.handle('window:isAlwaysOnTop', async () => {
+  if (!mainWindow) return false;
+  return mainWindow.isAlwaysOnTop();
+});

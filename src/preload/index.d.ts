@@ -20,11 +20,11 @@ declare global {
 
       loadPlaylists: () => Promise<any[]>;
       savePlaylists: (playlists: any[]) => Promise<boolean>;
-
       playlists: {
         export: (playlist: any) => Promise<boolean>;
         import: () => Promise<any>;
       };
+      onSetCurrentPlaylist: (callback: (playlistName: string | null) => void) => void;
 
       setQueue: (queue: string[]) => Promise<boolean>;
       getQueue: () => Promise<string[]>;
@@ -33,7 +33,8 @@ declare global {
 
       playTrack: (queue: string[], index: number) => void;
       onLoadQueue: (callback: (data: { queue: string[]; index: number }) => void) => void;
-      onSetCurrentPlaylist: (callback: (playlistName: string | null) => void) => void;
+      
+      setMiniPlayer: (enable: boolean) => Promise<boolean>;
     }
   }
 }

@@ -208,3 +208,23 @@ importPlaylistBtn.addEventListener('click', async () => {
 });
 
 statsBtn.addEventListener('click', showStatsModal);
+
+// -----------------------------------------------------------------------------------
+// Mini-player mode toggler
+// -----------------------------------------------------------------------------------
+const miniPlayerToggleBtn = document.getElementById('toggle-mini-player')!;
+const miniPlayerCloseBtn = document.getElementById('toggle-mini-player-close')!;
+
+miniPlayerToggleBtn.addEventListener('click', async () => {
+  await window.api.setMiniPlayer(true);
+  document.body.classList.add('mini-player-mode');
+  miniPlayerToggleBtn.style.display = 'none';
+  miniPlayerCloseBtn.style.display = 'block';
+});
+
+miniPlayerCloseBtn.addEventListener('click', async () => {
+  await window.api.setMiniPlayer(false);
+  document.body.classList.remove('mini-player-mode');
+  miniPlayerToggleBtn.style.display = 'block';
+  miniPlayerCloseBtn.style.display = 'none';
+});
