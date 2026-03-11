@@ -20,6 +20,8 @@ let shuffleMode = false;
 let progressRaf: number | null = null;
 let playStartTime: number | null = null;
 let saveStateInterval: number | null = null;
+let lastSavedListeningTime: number = 0;
+let listeningUpdateInterval: number | null = null;
 
 const playToggleBtn = document.getElementById('play-toggle') as HTMLButtonElement;
 const shuffleBtn = document.getElementById('shuffle-btn') as HTMLButtonElement;
@@ -117,6 +119,7 @@ function updateProgress() {
 }
 
 async function playFile(file: string) {
+  stopListeningTimeUpdate();
   if (howl) { howl.unload(); howl = null; }
   if (fallbackAudio) { fallbackAudio.pause(); fallbackAudio.src = ''; fallbackAudio = null; }
   if (progressRaf !== null) { cancelAnimationFrame(progressRaf); progressRaf = null; }
@@ -148,12 +151,12 @@ async function playFile(file: string) {
       onpause: () => {
         isPlaying = false;
         playToggleBtn.textContent = "▶";
-        recordStop();
+        stopListeningTimeUpdate();
         if (saveStateInterval !== null) { clearInterval(saveStateInterval); saveStateInterval = null; }
         savePlaybackState();
       },
       onend: () => {
-        recordStop();
+        stopListeningTimeUpdate();
         if (saveStateInterval !== null) { clearInterval(saveStateInterval); saveStateInterval = null; }
         loopMode ? playCurrent() : playNext();
       },
@@ -173,7 +176,7 @@ async function playCurrent() {
 }
 
 function playNext() {
-  recordStop();
+  stopListeningTimeUpdate();
   if (!queue.length) return;
   if (shuffleMode) index = Math.floor(Math.random() * queue.length);
   else index = (index < queue.length - 1) ? index + 1 : index;
@@ -183,7 +186,7 @@ function playNext() {
 }
 
 function playPrev() {
-  recordStop();
+  stopListeningTimeUpdate();
   if (!queue.length) return;
   if (shuffleMode) index = Math.floor(Math.random() * queue.length);
   else index = (index > 0) ? index - 1 : 0;
@@ -213,6 +216,8 @@ async function recordPlay(file: string, playlistName?: string) {
     }
 
     playStartTime = Date.now();
+    lastSavedListeningTime = 0;
+    startListeningTimeUpdate();
 
     await window.api.saveSettings(settings);
   } catch (err) {
@@ -220,31 +225,51 @@ async function recordPlay(file: string, playlistName?: string) {
   }
 }
 
-async function recordStop() {
-  try {
-    if (!playStartTime) return;
-
-    const settings = await window.api.loadSettings() || {};
-    settings.totalListeningTime = settings.totalListeningTime || 0;
-
-    let listenedTime = Math.floor((Date.now() - playStartTime) / 1000);
-
-    if (howl) {
-      const duration = Math.floor(howl.duration());
-      if (listenedTime > duration) listenedTime = duration;
-    }
-
-    if (listenedTime < 0 || listenedTime > 60 * 60 * 24) {
-      listenedTime = 0;
-    }
-
-    settings.totalListeningTime += listenedTime;
-    playStartTime = null;
-
-    await window.api.saveSettings(settings);
-  } catch (err) {
-    console.error("recordStop error:", err);
+function startListeningTimeUpdate() {
+  if (listeningUpdateInterval !== null) {
+    clearInterval(listeningUpdateInterval);
   }
+
+  listeningUpdateInterval = window.setInterval(async () => {
+    try {
+      if (!playStartTime || !isPlayingNow()) return;
+
+      const elapsedTime = Math.floor((Date.now() - playStartTime) / 1000);
+      const timeSinceLastSave = elapsedTime - lastSavedListeningTime;
+
+      if (timeSinceLastSave >= 1) {
+        const settings = await window.api.loadSettings() || {};
+        settings.totalListeningTime = settings.totalListeningTime || 0;
+
+        let incrementSeconds = timeSinceLastSave;
+
+        if (howl) {
+          const duration = Math.floor(howl.duration());
+          const currentPosition = Math.floor(howl.seek() as number);
+
+          if (currentPosition > duration) {
+            incrementSeconds = Math.min(incrementSeconds, duration - lastSavedListeningTime);
+          }
+        }
+
+        if (incrementSeconds > 0 && incrementSeconds <= 60) {
+          settings.totalListeningTime += incrementSeconds;
+          lastSavedListeningTime = elapsedTime;
+          await window.api.saveSettings(settings);
+        }
+      }
+    } catch (err) {
+      console.error("Error updating listening time:", err);
+    }
+  }, 1000);
+}
+
+function stopListeningTimeUpdate() {
+  if (listeningUpdateInterval !== null) {
+    clearInterval(listeningUpdateInterval);
+    listeningUpdateInterval = null;
+  }
+  playStartTime = null;
 }
 
 function pause() {
@@ -252,7 +277,7 @@ function pause() {
   if (fallbackAudio) fallbackAudio.pause();
   isPlaying = false;
   playToggleBtn.textContent = '▶';
-  recordStop();
+  stopListeningTimeUpdate();
   if (saveStateInterval !== null) { clearInterval(saveStateInterval); saveStateInterval = null; }
   savePlaybackState();
 }
