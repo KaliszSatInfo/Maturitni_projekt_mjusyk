@@ -19,6 +19,7 @@ let loopMode = false;
 let shuffleMode = false;
 let progressRaf: number | null = null;
 let playStartTime: number | null = null;
+let saveStateInterval: number | null = null;
 
 const playToggleBtn = document.getElementById('play-toggle') as HTMLButtonElement;
 const shuffleBtn = document.getElementById('shuffle-btn') as HTMLButtonElement;
@@ -41,6 +42,30 @@ const placeholder = new URL(
 function mapSliderToVolume(s: number) {
   const clamped = Math.max(0, Math.min(1, s));
   return Math.pow(clamped, 2) * 0.45;
+}
+
+async function savePlaybackState() {
+  try {
+    const settings = await window.api.loadSettings() || {};
+    let currentTime = 0;
+    
+    if (howl) {
+      currentTime = howl.seek() as number;
+    } else if (fallbackAudio) {
+      currentTime = fallbackAudio.currentTime;
+    }
+    
+    settings.lastPlayback = {
+      queue,
+      index,
+      time: currentTime,
+      isPlaying
+    };
+    
+    await window.api.saveSettings(settings);
+  } catch (err) {
+    console.error('Error saving playback state:', err);
+  }
 }
 
 function connectEQToHowl(howl: Howl) {
@@ -95,6 +120,7 @@ async function playFile(file: string) {
   if (howl) { howl.unload(); howl = null; }
   if (fallbackAudio) { fallbackAudio.pause(); fallbackAudio.src = ''; fallbackAudio = null; }
   if (progressRaf !== null) { cancelAnimationFrame(progressRaf); progressRaf = null; }
+  if (saveStateInterval !== null) { clearInterval(saveStateInterval); saveStateInterval = null; }
 
   const metadata = await window.api.getMetadata(file);
   const artData = await window.api.getAlbumArt(file);
@@ -115,14 +141,20 @@ async function playFile(file: string) {
 
         const playlistName = currentPlaylist?.name;
         recordPlay(file, playlistName);
+        
+        if (saveStateInterval !== null) clearInterval(saveStateInterval);
+        saveStateInterval = window.setInterval(savePlaybackState, 5000);
       },
       onpause: () => {
         isPlaying = false;
         playToggleBtn.textContent = "▶";
         recordStop();
+        if (saveStateInterval !== null) { clearInterval(saveStateInterval); saveStateInterval = null; }
+        savePlaybackState();
       },
       onend: () => {
         recordStop();
+        if (saveStateInterval !== null) { clearInterval(saveStateInterval); saveStateInterval = null; }
         loopMode ? playCurrent() : playNext();
       },
       onload: () => updateProgress()
@@ -146,6 +178,7 @@ function playNext() {
   if (shuffleMode) index = Math.floor(Math.random() * queue.length);
   else index = (index < queue.length - 1) ? index + 1 : index;
   window.api.setIndex(index);
+  savePlaybackState();
   playCurrent();
 }
 
@@ -155,6 +188,7 @@ function playPrev() {
   if (shuffleMode) index = Math.floor(Math.random() * queue.length);
   else index = (index > 0) ? index - 1 : 0;
   window.api.setIndex(index);
+  savePlaybackState();
   playCurrent();
 }
 
@@ -219,6 +253,8 @@ function pause() {
   isPlaying = false;
   playToggleBtn.textContent = '▶';
   recordStop();
+  if (saveStateInterval !== null) { clearInterval(saveStateInterval); saveStateInterval = null; }
+  savePlaybackState();
 }
 
 function isPlayingNow(): boolean {
@@ -247,10 +283,17 @@ progressBar.addEventListener('input', () => {
   updateProgress();
 });
 
-volumeSlider.addEventListener('input', () => {
+volumeSlider.addEventListener('input', async () => {
   const mapped = mapSliderToVolume(Number(volumeSlider.value));
   Howler.volume(mapped);
   if (fallbackAudio) fallbackAudio.volume = mapped;
+    try {
+    const settings = await window.api.loadSettings() || {};
+    settings.volume = Number(volumeSlider.value);
+    await window.api.saveSettings(settings);
+  } catch (err) {
+    console.error('Error saving volume:', err);
+  }
 });
 
 loopBtn.addEventListener('click', () => {
@@ -285,4 +328,27 @@ nextBtn.addEventListener('click', playNext);
     window.api.setIndex(index);
     playCurrent();
   });
+  
+  if (settings.lastPlayback?.queue?.length > 0) {
+    queue = settings.lastPlayback.queue;
+    index = Math.min(settings.lastPlayback.index || 0, queue.length - 1);
+    
+    window.api.setQueue(queue);
+    window.api.setIndex(index);
+    
+    const file = queue[index];
+    if (file) {
+      await playFile(file);
+      
+      if (typeof settings.lastPlayback.time === 'number' && howl) {
+        const savedTime = Math.max(0, settings.lastPlayback.time);
+        howl.seek(savedTime);
+      }
+      
+      if (!settings.lastPlayback.isPlaying) {
+        howl?.pause();
+        hasLoadedTrack = true;
+      }
+    }
+  }
 })();

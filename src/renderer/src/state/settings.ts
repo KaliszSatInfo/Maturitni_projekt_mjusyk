@@ -21,6 +21,7 @@ export let lastPlayback: {
   queue: string[];
   index: number;
   time?: number;
+  isPlaying?: boolean;
 } | null = null;
 
 export let playCounts: Record<string, number> = {};
