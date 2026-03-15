@@ -1,4 +1,4 @@
-# TESTOVACÍ PROTOKOL: APLIKACE MJUSYK
+# TESTOVACÍ PROTOKOL: APLIKACE MJUSYK - Jméno Přijmení
 
 1. ZÁKLADNÍ FUNKCE A UI
   - [] Spuštění: Správné načtení, přehlednost a vizuální integrita rozhraní.
