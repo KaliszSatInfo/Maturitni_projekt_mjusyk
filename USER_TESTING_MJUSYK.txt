@@ -5,6 +5,7 @@
   - [] Nahrání skladeb: Výběr složky ("Select folder"), rychlost načtení, správnost metadat a obalů.
   - [] Správa složek: Přidání více zdrojů, odstranění zdrojů.
   - [] Zobrazení: Přepínání Grid/Table view, čitelnost textu a plynulost scrollování.
+  - [] Perzistence dat: Uložení stavu při vypnutí (naposledy hraná skladba, pozice v čase, nastavená hlasitost a aktivní režimy Shuffle/Repeat) a jejich správné načtení po restartu.
 
 2. PŘEHRÁVAČ A OVLÁDÁNÍ
   - [] Základní prvky: Play/Pause, přepínání (⏮/⏭), funkční ukazatel průběhu a ovládání hlasitosti.
