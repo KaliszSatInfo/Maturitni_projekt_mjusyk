@@ -27,17 +27,34 @@
     <button id="toggle-view">Toggle Grid/Table</button>
     <button id="toggle-mini-player">Mini Player</button>
 
-    <h3>Folders</h3>
-    <div id="folder-list"></div>
+    
 
-    <h3>Medatada</h3>
-    <div id="metadata-options"></div>
+    <div class="section">
+      <h3 class="section-header">
+        <span class="section-toggle">▼</span>
+        <span>Folders</span>
+      </h3>
+      <div id="folder-list" class="section-content"></div>
+    </div>
 
-    <h3>Playlists</h3>
-    <button id="new-playlist">New Playlist</button>
-    <div id="playlist-list"></div>
+    <div class="section">
+      <h3 class="section-header">
+        <span class="section-toggle">▼</span>
+        <span>Metadat Selector</span>
+      </h3>
+      <div id="metadata-options" class="section-content"></div>
+    </div>
 
-    <button id="import-playlist">Import</button>
+    <div class="section">
+      <button id="new-playlist">New Playlist</button>
+      <button id="import-playlist">Import Playlist</button>
+      <h3 class="section-header">
+        <span class="section-toggle">▼</span>
+        <span>Playlists</span>
+      </h3>
+      <div id="playlist-list" class="section-content"></div>
+    </div>
+
     <button id="show-stats">Show Stats</button>
     <div id="equalizer"></div>
   </div>

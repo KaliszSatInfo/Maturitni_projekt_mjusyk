@@ -19,6 +19,52 @@
   font-weight: 500;
 }
 
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  padding: 4px 0;
+  transition: color 0.15s ease;
+}
+
+.section-header:hover {
+  color: #d8b4fe;
+}
+
+.section-toggle {
+  display: inline-block;
+  font-size: 0.6rem;
+  transition: transform 0.2s ease;
+  width: 12px;
+}
+
+.section-toggle.collapsed {
+  transform: rotate(-90deg);
+}
+
+.section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 1000px;
+  overflow: hidden;
+  transition: max-height 0.2s ease, opacity 0.2s ease;
+  opacity: 1;
+}
+
+.section-content.hidden {
+  max-height: 0;
+  opacity: 0;
+}
+
 #side-panel button {
   background: #1c182b;
   border: 1px solid #2b2540;

@@ -17,6 +17,8 @@ export let volume = 1.0;
 export let loopEnabled = false;
 export let shuffleEnabled = false;
 
+export let collapsedSections: Set<string> = new Set();
+
 export let lastPlayback: {
   queue: string[];
   index: number;
@@ -53,6 +55,10 @@ export async function loadSettingsState() {
     shuffleEnabled = settings.shuffle;
   }
 
+  if (settings.collapsedSections) {
+    collapsedSections = new Set(settings.collapsedSections);
+  }
+
   if (settings.lastPlayback) {
     lastPlayback = settings.lastPlayback;
   }
@@ -83,6 +89,7 @@ export async function saveSettingsState() {
     volume,
     loop: loopEnabled,
     shuffle: shuffleEnabled,
+    collapsedSections: Array.from(collapsedSections),
     lastPlayback,
 
     playCounts,

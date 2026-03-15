@@ -1,6 +1,6 @@
 import { Howl, Howler } from "howler";
 import { Equalizer } from "./ui/equalizer";
-import { formatDuration } from "./state/settings";
+import { formatDuration, volume } from "./state/settings";
 import { currentPlaylist } from "./state/playlists";
 
 const eqContainer = document.getElementById("equalizer")!;
@@ -336,7 +336,10 @@ nextBtn.addEventListener('click', playNext);
 
 (async function init() {
   const settings = await window.api.loadSettings() || {};
-  if (settings.volume !== undefined) volumeSlider.value = settings.volume.toString();
+  
+  // Set volume from loaded settings or use the imported default
+  const savedVolume = settings.volume !== undefined ? settings.volume : volume;
+  volumeSlider.value = savedVolume.toString();
   Howler.volume(mapSliderToVolume(Number(volumeSlider.value)));
 
   loopMode = !!settings.loop;

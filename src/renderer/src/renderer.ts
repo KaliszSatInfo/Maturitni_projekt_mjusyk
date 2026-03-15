@@ -22,6 +22,7 @@ import {
   loadSettingsState,
   saveSettingsState,
   toggleTableView,
+  collapsedSections,
 } from './state/settings';
 
 import { songCache, pruneCache } from './state/cache';
@@ -50,12 +51,49 @@ const statsBtn = document.getElementById('show-stats')!;
 const metadataOptions = document.getElementById('metadata-options')!;
 
 // -----------------------------------------------------------------------------------
+// Section toggle setup
+// -----------------------------------------------------------------------------------
+function initSectionToggles() {
+  const sections = document.querySelectorAll('.section-header');
+  
+  sections.forEach(header => {
+    const section = header.closest('.section')!;
+    const sectionName = header.querySelector('span:nth-child(2)')?.textContent?.toLowerCase() || '';
+    const toggle = header.querySelector('.section-toggle')!;
+    const content = section.querySelector('.section-content')!;
+    
+    if (collapsedSections.has(sectionName)) {
+      toggle.classList.add('collapsed');
+      content.classList.add('hidden');
+    }
+    
+    header.addEventListener('click', async () => {
+      const isCollapsed = content.classList.contains('hidden');
+      
+      if (isCollapsed) {
+        collapsedSections.delete(sectionName);
+        toggle.classList.remove('collapsed');
+        content.classList.remove('hidden');
+      } else {
+        collapsedSections.add(sectionName);
+        toggle.classList.add('collapsed');
+        content.classList.add('hidden');
+      }
+      
+      await saveSettingsState();
+    });
+  });
+}
+
+// -----------------------------------------------------------------------------------
 // Init thingies
 // -----------------------------------------------------------------------------------
 (async () => {
   await loadFoldersState();
   await loadSettingsState();
   await loadPlaylistsState();
+
+  initSectionToggles();
 
   renderFolderList();
   renderPlaylistList();
