@@ -6,6 +6,8 @@ export type Playlist = {
 export let playlists: Playlist[] = [];
 export let currentPlaylist: Playlist | null = null;
 
+import { showPlaylistContextMenu } from '../ui/contextMenu';
+
 export async function loadPlaylistsState() {
   playlists = await window.api.loadPlaylists();
   return playlists;
@@ -43,7 +45,8 @@ export function addSongToPlaylist(pl: Playlist, songPath: string) {
 export function renderPlaylists(
   playlistContainer: HTMLElement,
   onSelect: () => void,
-  onDeletePlaylist: (index: number) => Promise<void>
+  onDeletePlaylist: (index: number) => Promise<void>,
+  onExportPlaylist?: (playlist: Playlist) => Promise<void>
 ) {
   playlistContainer.innerHTML = '';
 
@@ -61,14 +64,18 @@ export function renderPlaylists(
       onSelect();
     });
 
-    const del = document.createElement('button');
-    del.textContent = 'Delete';
-    del.addEventListener('click', async e => {
-      e.stopPropagation();
-      await onDeletePlaylist(index);
+    div.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      if (onExportPlaylist) {
+        showPlaylistContextMenu(
+          e.clientX,
+          e.clientY,
+          () => onExportPlaylist(pl),
+          () => onDeletePlaylist(index)
+        );
+      }
     });
 
-    div.appendChild(del);
     playlistContainer.appendChild(div);
   });
 

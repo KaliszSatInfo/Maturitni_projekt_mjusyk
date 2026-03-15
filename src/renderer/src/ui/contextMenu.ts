@@ -2,6 +2,58 @@ import { playlists, currentPlaylist, savePlaylistsState } from '../state/playlis
 
 let activeContextMenu: HTMLElement | null = null;
 
+export function showPlaylistContextMenu(
+  x: number,
+  y: number,
+  onExport: () => Promise<void>,
+  onDelete: () => Promise<void>
+) {
+  if (activeContextMenu) {
+    activeContextMenu.remove();
+    activeContextMenu = null;
+  }
+
+  const menu = document.createElement('div');
+  menu.className = 'context-menu';
+  menu.style.left = `${x}px`;
+  menu.style.top = `${y}px`;
+
+  function closeMenu() {
+    if (activeContextMenu) {
+      activeContextMenu.remove();
+      activeContextMenu = null;
+    }
+    document.removeEventListener('click', closeMenu);
+  }
+
+  const exportItem = document.createElement('div');
+  exportItem.className = 'context-item';
+  exportItem.textContent = 'Export';
+  exportItem.addEventListener('click', async () => {
+    await onExport();
+    closeMenu();
+  });
+  menu.appendChild(exportItem);
+
+  const sep = document.createElement('div');
+  sep.className = 'context-separator';
+  menu.appendChild(sep);
+
+  const deleteItem = document.createElement('div');
+  deleteItem.className = 'context-item';
+  deleteItem.textContent = 'Delete';
+  deleteItem.addEventListener('click', async () => {
+    await onDelete();
+    closeMenu();
+  });
+  menu.appendChild(deleteItem);
+
+  document.body.appendChild(menu);
+  activeContextMenu = menu;
+
+  setTimeout(() => document.addEventListener('click', closeMenu), 0);
+}
+
 export function showSongContextMenu(x: number, y: number, filePath: string, reloadCallback: () => void) {
   if (activeContextMenu) {
     activeContextMenu.remove();

@@ -28,10 +28,16 @@ export function renderGridView(
     const card = document.createElement('div');
     card.className = 'file-card';
 
-    card.innerHTML = `
-      <img src="${cached?.albumArt || placeholder}" class="album-art">
-      <div class="file-label">${displayTitle}</div>
-    `;
+    const img = document.createElement('img');
+    img.src = cached?.albumArt || placeholder;
+    img.className = 'album-art';
+
+    const label = document.createElement('div');
+    label.className = 'file-label';
+    label.textContent = displayTitle;
+
+    card.appendChild(img);
+    card.appendChild(label);
 
     card.addEventListener('dblclick', () => onPlay(files, files.indexOf(filePath)));
     card.addEventListener('contextmenu', e => {

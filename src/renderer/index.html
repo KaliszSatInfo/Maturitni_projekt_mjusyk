@@ -5,8 +5,9 @@
     <title>Mjusyk</title>
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: file:; media-src 'self' file: data: blob:;"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; img-src 'self' data: file:; media-src 'self' file: data: blob:; font-src 'self' https://fonts.gstatic.com;"
     />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="assets/layout.css" type="text/css" rel="stylesheet" />
     <link href="assets/sideBar.css" type="text/css" rel="stylesheet" />
     <link href="assets/gridView.css" type="text/css" rel="stylesheet" />
@@ -36,7 +37,6 @@
     <button id="new-playlist">New Playlist</button>
     <div id="playlist-list"></div>
 
-    <button id="export-playlist">Export</button>
     <button id="import-playlist">Import</button>
     <button id="show-stats">Show Stats</button>
     <div id="equalizer"></div>

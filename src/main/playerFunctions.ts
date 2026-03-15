@@ -24,7 +24,7 @@ ipcMain.handle('folder:read', async (_event, folderPaths: string[]) => {
 
   for (const folderPath of folderPaths) {
     try {
-      const files = fs.readdirSync(folderPath).filter(file =>
+      const files = fs.readdirSync(folderPath, { encoding: 'utf8' }).filter(file =>
         audioExtensions.includes(path.extname(file).toLowerCase())
       );
 
@@ -53,7 +53,7 @@ ipcMain.handle('file:getAlbumArt', async (_event, filePath: string) => {
 ipcMain.handle('file:getMetadata', async (_event, filePath: string) => {
   try {
     const metadata = await musicMetadata.parseFile(filePath);
-    return {
+    const result = {
       title: metadata.common.title ?? '',
       artist: metadata.common.artist ?? '',
       album: metadata.common.album ?? '',
@@ -63,6 +63,12 @@ ipcMain.handle('file:getMetadata', async (_event, filePath: string) => {
       diskNumber: metadata.common.disk?.no ?? '',
       duration: metadata.format.duration ?? ''
     };
+    Object.keys(result).forEach(key => {
+      if (typeof result[key as keyof typeof result] === 'string') {
+        result[key as keyof typeof result] = Buffer.from(result[key as keyof typeof result] as string, 'utf-8').toString('utf-8');
+      }
+    });
+    return result;
   } catch (err) {
     console.error('Error reading metadata', filePath, err);
     return {};

@@ -45,7 +45,6 @@ const playlistModal = document.getElementById('new-playlist-modal')!;
 const playlistInput = document.getElementById('playlist-name-input') as HTMLInputElement;
 const playlistCreateBtn = document.getElementById('playlist-create-btn')!;
 const playlistCancelBtn = document.getElementById('playlist-cancel-btn')!;
-const exportPlaylistBtn = document.getElementById('export-playlist')!;
 const importPlaylistBtn = document.getElementById('import-playlist')!;
 const statsBtn = document.getElementById('show-stats')!;
 const metadataOptions = document.getElementById('metadata-options')!;
@@ -107,6 +106,10 @@ function renderPlaylistList() {
       await savePlaylistsState();
       renderPlaylistList();
       await loadAllMusic();
+    },
+    async (playlist) => {
+      const ok = await window.api.playlists.export(playlist);
+      if (!ok) console.error('Playlist export failed');
     }
   );
 }
@@ -190,14 +193,8 @@ toggleBtn.addEventListener('click', async () => {
 });
 
 // -----------------------------------------------------------------------------------
-// Exports, imports, stats (will move into their own file. Trust.)
+// Imports and stats
 // -----------------------------------------------------------------------------------
-exportPlaylistBtn.addEventListener('click', async () => {
-  if (!currentPlaylist) return alert('No playlist selected');
-  const ok = await window.api.playlists.export(currentPlaylist);
-  if (!ok) console.error('Playlist export failed');
-});
-
 importPlaylistBtn.addEventListener('click', async () => {
   const imported = await window.api.playlists.import();
   if (!imported) return;
