@@ -1,0 +1,45 @@
+# TESTOVACÍ PROTOKOL: APLIKACE MJUSYK
+
+1. ZÁKLADNÍ FUNKCE A UI
+  - [] Spuštění: Správné načtení, přehlednost a vizuální integrita rozhraní.
+  - [] Nahrání skladeb: Výběr složky ("Select folder"), rychlost načtení, správnost metadat a obalů.
+  - [] Správa složek: Přidání více zdrojů, odstranění zdrojů.
+  - [] Zobrazení: Přepínání Grid/Table view, čitelnost textu a plynulost scrollování.
+
+2. PŘEHRÁVAČ A OVLÁDÁNÍ
+  - [] Základní prvky: Play/Pause, přepínání (⏮/⏭), funkční ukazatel průběhu a ovládání hlasitosti.
+  - [] Režimy: Aktivace Shuffle (náhodně) a Repeat (smyčka) – kontrola indikátorů.
+  - [] Mini Player: Přepnutí do mini režimu, posun po ploše a ovládání v malém okně.
+  - [] Equalizer: Funkčnost posuvníků a jejich vliv na zvuk.
+
+3. PLAYLISTY A ORGANIZACE
+  - [] Vytváření: Nový playlist, pojmenování a zobrazení v bočním panelu.
+  - [] Interakce: Přidávání skladeb přes pravé tlačítko (Při kliknutí na skladbu).
+  - [] Správa: Přehrávání vybraného playlistu, export do souboru a zpětný import.
+  - [] Mazání: Odstranění playlistu bez smazání fyzických souborů.
+
+4. STATISTIKA
+  - [] Stats: Modální okno "Show Stats" – kontrola počtu přehrání skladeb, umělců, playlistů a celkového času.
+
+5. VÝKON A STABILITA
+  - [] Zátěž: Plynulost při 1000+ skladbách, absence lagů při procházení.
+  - [] Audio: Čistota zvuku napříč formáty (MP3, FLAC, WAV).
+  - [] Responzivita: Adaptace prvků při změně velikosti okna.
+  - [] Dlouhodobý test: Stabilita při 30+ minutách souvislého přehrávání.
+
+---
+CHYBY A TECHNICKÉ PROBLÉMY
+//Popište, co nefunguje: Kroky k reprodukci ➔ Očekávaný výsledek ➔ Reálný výsledek.
+-
+
+UX / UI PŘIPOMÍNKY (Použitelnost)
+//Co je nepřehledné? Kde drhne ovládání? Co působí vizuálně nekonzistentně?
+-
+
+NÁVRHY NA ZLEPŠENÍ (Feature Requests)
+//Co v aplikaci chybí? Jakou funkci by bylo hodno doprogramovat? (např. tmavý/světlý režim, texty písní, vyhledávání)?
+-
+
+CELKOVÝ DOJEM
+//Subjektivní hodnocení: Stabilita, rychlost a pocit z používání (1–10).
+-
