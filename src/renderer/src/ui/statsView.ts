@@ -68,7 +68,9 @@ export async function showStatsModal() {
       listEl.innerHTML = '';
       items.forEach(([name, count], idx) => {
         const li = document.createElement('li');
-        li.textContent = `${name.split(/[/\\]/).pop() || name} — ${count}`;
+        let displayName = name.split(/[/\\]/).pop() || name;
+        displayName = displayName.replace(/\.[^/.]+$/, '');
+        li.textContent = `${displayName} — ${count}`;
         li.style.display = idx < limit ? 'list-item' : 'none';
         listEl.appendChild(li);
       });
