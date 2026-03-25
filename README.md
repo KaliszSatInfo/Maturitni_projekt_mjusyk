@@ -1,34 +1,20 @@
 # mjusyk
 
-A minimal Electron application with TypeScript
+Simple music player
 
-## Recommended IDE Setup
-
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
-
-## Project Setup
-
-### Install
+## Setup
 
 ```bash
-$ npm install
+git clone https://github.com/KaliszSatInfo/Maturitni_projekt_mjusyk
+cd mjusyk
+npm install
+npm start
 ```
 
-### Development
+## Build
 
 ```bash
-$ npm run dev
-```
-
-### Build
-
-```bash
-# For windows
-$ npm run build:win
-
-# For macOS
-$ npm run build:mac
-
-# For Linux
-$ npm run build:linux
+npm run build:win   # Windows
+npm run build:mac   # macOS
+npm run build:linux # Linux
 ```
