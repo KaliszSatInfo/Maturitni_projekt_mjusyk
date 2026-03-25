@@ -6,7 +6,7 @@ Simple music player
 
 ```bash
 git clone https://github.com/KaliszSatInfo/Maturitni_projekt_mjusyk
-cd mjusyk
+cd Maturitni_projekt_mjusyk
 npm install
 npm start
 ```
