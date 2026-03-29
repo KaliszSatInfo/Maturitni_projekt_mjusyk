@@ -1,6 +1,6 @@
 # mjusyk
 
-Simple music player. You can either download the current version from releases or you can build the app yourself using these instructions:
+Simple music player. You can either download the current version from releases tab or you can build the app yourself using these instructions:
 
 ## Setup
 
