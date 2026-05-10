@@ -57,7 +57,9 @@ const metadataOptions = document.getElementById('metadata-options')!;
 // -----------------------------------------------------------------------------------
 const selectedIndices: Set<number> = new Set();
 let lastSelectedIndex: number | null = null;
-let folderViewFiles: string[] = [];
+
+let sortField: string = 'title';
+let sortDir: 'asc' | 'desc' = 'asc';
 
 function renderFileList(files: string[]) {
   const onPlay = (files: string[], index: number) =>
@@ -65,6 +67,19 @@ function renderFileList(files: string[]) {
 
   const onContextMenu = (x: number, y: number, filePath: string, selectedFiles: string[]) =>
     showSongContextMenu(x, y, filePath, selectedFiles, loadAllMusic);
+
+  const onSort = (field: string) => {
+    if (field !== sortField) {
+      sortField = field;
+      sortDir = 'asc';
+    } else if (sortDir === 'asc') {
+      sortDir = 'desc';
+    } else {
+      sortField = 'title';
+      sortDir = 'asc';
+    }
+    renderFileList(files);
+  };
 
   const onSelect = (idx: number, ev: MouseEvent) => {
     if (ev.shiftKey && lastSelectedIndex !== null) {
@@ -83,15 +98,49 @@ function renderFileList(files: string[]) {
     }
 
     if (isTableView) {
+      const filesForTable = files.slice();
+      if (sortField) {
+        filesForTable.sort((a, b) => {
+
+          const getVal = (fp: string, field: string) => {
+            if (field === 'title') {
+              const v = (songCache[fp]?.metadata?.title && songCache[fp].metadata.title.trim() !== '') ? songCache[fp].metadata.title : fp.split(/[/\\]/).pop() || '';
+              return v.toString().toLowerCase();
+            }
+            const val = songCache[fp]?.metadata?.[field];
+            if (val == null) return '';
+            return val;
+          };
+
+          const va = getVal(a, sortField);
+          const vb = getVal(b, sortField);
+
+          if (['duration','year','trackNumber','diskNumber'].includes(sortField)) {
+            const na = Number(va) || 0;
+            const nb = Number(vb) || 0;
+            return sortDir === 'asc' ? na - nb : nb - na;
+          }
+
+          const sa = String(va).toLowerCase();
+          const sb = String(vb).toLowerCase();
+          if (sa < sb) return sortDir === 'asc' ? -1 : 1;
+          if (sa > sb) return sortDir === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+
       renderTableView(
         grid,
-        files,
+        filesForTable,
         songCache,
         visibleMetadata,
         onPlay,
         onContextMenu,
         selectedIndices,
         onSelect,
+        onSort,
+        sortField,
+        sortDir,
         () => loadAllMusic()
       );
     } else {
@@ -108,15 +157,48 @@ function renderFileList(files: string[]) {
   };
 
   if (isTableView) {
+    const filesForTable = files.slice();
+    if (sortField) {
+      filesForTable.sort((a, b) => {
+        const getVal = (fp: string, field: string) => {
+          if (field === 'title') {
+            const v = (songCache[fp]?.metadata?.title && songCache[fp].metadata.title.trim() !== '') ? songCache[fp].metadata.title : fp.split(/[/\\]/).pop() || '';
+            return v.toString().toLowerCase();
+          }
+          const val = songCache[fp]?.metadata?.[field];
+          if (val == null) return '';
+          return val;
+        };
+
+        const va = getVal(a, sortField);
+        const vb = getVal(b, sortField);
+
+        if (['duration','year','trackNumber','diskNumber'].includes(sortField)) {
+          const na = Number(va) || 0;
+          const nb = Number(vb) || 0;
+          return sortDir === 'asc' ? na - nb : nb - na;
+        }
+
+        const sa = String(va).toLowerCase();
+        const sb = String(vb).toLowerCase();
+        if (sa < sb) return sortDir === 'asc' ? -1 : 1;
+        if (sa > sb) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
     renderTableView(
       grid,
-      files,
+      filesForTable,
       songCache,
       visibleMetadata,
       onPlay,
       onContextMenu,
       selectedIndices,
       onSelect,
+      onSort,
+      sortField,
+      sortDir,
       () => loadAllMusic()
     );
   } else {
@@ -265,7 +347,6 @@ async function loadAllMusic() {
     ? files.filter(f => currentPlaylist!.songPaths.includes(f))
     : files;
 
-  folderViewFiles = files;
   const currentFiles = new Set<string>();
 
   for (const filePath of files) {
@@ -279,9 +360,6 @@ async function loadAllMusic() {
   }
 
   pruneCache(currentFiles);
-
-  const onPlay = (files: string[], index: number) =>
-    window.api.playTrack(files, index);
 
   renderFileList(files);
   loader.style.display = 'none';

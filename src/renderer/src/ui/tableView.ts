@@ -14,6 +14,9 @@ export function renderTableView(
   onContextMenu: (x: number, y: number, filePath: string, selectedFiles: string[]) => void,
   selectedIndices: Set<number>,
   onSelect: (idx: number, ev: MouseEvent) => void,
+  onSort: (field: string) => void,
+  sortField?: string,
+  sortDir?: 'asc' | 'desc',
   onReorder?: () => void
 ) {
   gridContainer.innerHTML = '';
@@ -54,6 +57,14 @@ export function renderTableView(
 
     th.dataset.field = field;
     th.draggable = true;
+
+    if (sortField === field) {
+      th.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+    }
+
+    th.addEventListener('click', () => {
+      if (onSort) onSort(field);
+    });
 
     th.addEventListener('dragstart', onColumnDragStart);
     th.addEventListener('dragover', onColumnDragOver);
