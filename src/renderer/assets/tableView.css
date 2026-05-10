@@ -50,3 +50,7 @@
   border-radius: 4px;
   object-fit: cover;
 }
+
+#file-grid.table-view tr.selected {
+  background: rgba(124,58,237,0.08);
+}

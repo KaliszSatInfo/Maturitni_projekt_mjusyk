@@ -11,7 +11,9 @@ export function renderTableView(
   songCache: Record<string, CachedSong>,
   visibleMetadata: Set<string>,
   onPlay: (files: string[], index: number) => void,
-  onContextMenu: (x: number, y: number, filePath: string) => void,
+  onContextMenu: (x: number, y: number, filePath: string, selectedFiles: string[]) => void,
+  selectedIndices: Set<number>,
+  onSelect: (idx: number, ev: MouseEvent) => void,
   onReorder?: () => void
 ) {
   gridContainer.innerHTML = '';
@@ -101,10 +103,14 @@ export function renderTableView(
 
     tr.addEventListener('contextmenu', e => {
       e.preventDefault();
-      onContextMenu(e.pageX, e.pageY, filePath);
+      const selectedFiles = Array.from(selectedIndices).map(i => files[i]);
+      onContextMenu(e.pageX, e.pageY, filePath, selectedFiles);
     });
 
+    tr.addEventListener('click', (e) => onSelect(idx, e as MouseEvent));
     tr.addEventListener('dblclick', () => onPlay(files, idx));
+
+    if (selectedIndices.has(idx)) tr.classList.add('selected');
 
     tbody.appendChild(tr);
   });

@@ -35,13 +35,18 @@ export function renderFolders(
     div.className = 'folder-item';
 
     const folderName = folder.split(/[\\/]/).pop() || folder;
-    div.textContent = folderName;
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'folder-name';
+    nameSpan.textContent = folderName;
+    nameSpan.setAttribute('title', folder);
+
+    div.appendChild(nameSpan);
 
     div.setAttribute('data-fullpath', folder);
 
     const delBtn = document.createElement('button');
     delBtn.textContent = 'Delete';
-    delBtn.addEventListener('click', () => onRemove(idx));
+    delBtn.addEventListener('click', (e) => { e.stopPropagation(); onRemove(idx); });
 
     div.appendChild(delBtn);
     container.appendChild(div);

@@ -93,8 +93,19 @@
   cursor: pointer;
   transition: background 0.15s ease;
   white-space: nowrap;
+}
+
+.folder-name {
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-item button {
+  flex: 0 0 auto;
+  margin-left: 8px;
 }
 
 .folder-item:hover,
@@ -177,5 +188,21 @@
 }
 
 #side-panel::-webkit-scrollbar-thumb:hover {
+  background: #3a3355;
+}
+
+#folder-list {
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+}
+
+#folder-list::-webkit-scrollbar {
+  width: 8px;
+}
+#folder-list::-webkit-scrollbar-thumb {
+  background: #2b2540;
+  border-radius: 4px;
+}
+#folder-list::-webkit-scrollbar-thumb:hover {
   background: #3a3355;
 }

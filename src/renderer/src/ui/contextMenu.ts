@@ -54,7 +54,7 @@ export function showPlaylistContextMenu(
   setTimeout(() => document.addEventListener('click', closeMenu), 0);
 }
 
-export function showSongContextMenu(x: number, y: number, filePath: string, reloadCallback: () => void) {
+export function showSongContextMenu(x: number, y: number, filePath: string, selectedFiles: string[], reloadCallback: () => void) {
   if (activeContextMenu) {
     activeContextMenu.remove();
     activeContextMenu = null;
@@ -98,9 +98,16 @@ export function showSongContextMenu(x: number, y: number, filePath: string, relo
   playlists.forEach(pl => {
     const item = document.createElement('div');
     item.className = 'context-item';
-    item.textContent = pl.name;
+    if (selectedFiles && selectedFiles.length > 1) {
+      item.textContent = `${pl.name} (add ${selectedFiles.length})`;
+    } else {
+      item.textContent = pl.name;
+    }
     item.addEventListener('click', async () => {
-      if (!pl.songPaths.includes(filePath)) pl.songPaths.push(filePath);
+      const toAdd = (selectedFiles && selectedFiles.length > 0 && selectedFiles.includes(filePath)) ? selectedFiles : [filePath];
+      for (const fp of toAdd) {
+        if (!pl.songPaths.includes(fp)) pl.songPaths.push(fp);
+      }
       await savePlaylistsState();
       closeMenu();
     });

@@ -9,7 +9,9 @@ export function renderGridView(
   files: string[],
   songCache: Record<string, CachedSong>,
   onPlay: (files: string[], index: number) => void,
-  onContextMenu: (x: number, y: number, filePath: string) => void
+  onContextMenu: (x: number, y: number, filePath: string, selectedFiles: string[]) => void,
+  selectedIndices: Set<number>,
+  onSelect: (idx: number, ev: MouseEvent) => void
 ) {
   gridContainer.innerHTML = '';
   gridContainer.classList.add('grid-view');
@@ -40,10 +42,14 @@ export function renderGridView(
     card.appendChild(label);
 
     card.addEventListener('dblclick', () => onPlay(files, files.indexOf(filePath)));
+    card.addEventListener('click', (e) => onSelect(files.indexOf(filePath), e as MouseEvent));
     card.addEventListener('contextmenu', e => {
       e.preventDefault();
-      onContextMenu(e.pageX, e.pageY, filePath);
+      const selectedFiles = Array.from(selectedIndices).map(i => files[i]);
+      onContextMenu(e.pageX, e.pageY, filePath, selectedFiles);
     });
+
+    if (selectedIndices.has(files.indexOf(filePath))) card.classList.add('selected');
 
     gridContainer.appendChild(card);
   }

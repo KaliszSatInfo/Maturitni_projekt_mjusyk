@@ -50,6 +50,88 @@ const importPlaylistBtn = document.getElementById('import-playlist')!;
 const statsBtn = document.getElementById('show-stats')!;
 const metadataOptions = document.getElementById('metadata-options')!;
 
+
+
+// -----------------------------------------------------------------------------------
+// Multiselect thingies
+// -----------------------------------------------------------------------------------
+const selectedIndices: Set<number> = new Set();
+let lastSelectedIndex: number | null = null;
+let folderViewFiles: string[] = [];
+
+function renderFileList(files: string[]) {
+  const onPlay = (files: string[], index: number) =>
+    window.api.playTrack(files, index);
+
+  const onContextMenu = (x: number, y: number, filePath: string, selectedFiles: string[]) =>
+    showSongContextMenu(x, y, filePath, selectedFiles, loadAllMusic);
+
+  const onSelect = (idx: number, ev: MouseEvent) => {
+    if (ev.shiftKey && lastSelectedIndex !== null) {
+      const start = Math.min(lastSelectedIndex, idx);
+      const end = Math.max(lastSelectedIndex, idx);
+      selectedIndices.clear();
+      for (let i = start; i <= end; i++) selectedIndices.add(i);
+    } else if (ev.ctrlKey || ev.metaKey) {
+      if (selectedIndices.has(idx)) selectedIndices.delete(idx);
+      else selectedIndices.add(idx);
+      lastSelectedIndex = idx;
+    } else {
+      selectedIndices.clear();
+      selectedIndices.add(idx);
+      lastSelectedIndex = idx;
+    }
+
+    if (isTableView) {
+      renderTableView(
+        grid,
+        files,
+        songCache,
+        visibleMetadata,
+        onPlay,
+        onContextMenu,
+        selectedIndices,
+        onSelect,
+        () => loadAllMusic()
+      );
+    } else {
+      renderGridView(
+        grid,
+        files,
+        songCache,
+        onPlay,
+        onContextMenu,
+        selectedIndices,
+        onSelect
+      );
+    }
+  };
+
+  if (isTableView) {
+    renderTableView(
+      grid,
+      files,
+      songCache,
+      visibleMetadata,
+      onPlay,
+      onContextMenu,
+      selectedIndices,
+      onSelect,
+      () => loadAllMusic()
+    );
+  } else {
+    renderGridView(
+      grid,
+      files,
+      songCache,
+      onPlay,
+      onContextMenu,
+      selectedIndices,
+      onSelect
+    );
+  }
+}
+
 // -----------------------------------------------------------------------------------
 // Section toggle setup
 // -----------------------------------------------------------------------------------
@@ -183,6 +265,7 @@ async function loadAllMusic() {
     ? files.filter(f => currentPlaylist!.songPaths.includes(f))
     : files;
 
+  folderViewFiles = files;
   const currentFiles = new Set<string>();
 
   for (const filePath of files) {
@@ -200,23 +283,7 @@ async function loadAllMusic() {
   const onPlay = (files: string[], index: number) =>
     window.api.playTrack(files, index);
 
-  const onContextMenu = (x: number, y: number, filePath: string) =>
-    showSongContextMenu(x, y, filePath, loadAllMusic);
-
-  if (isTableView) {
-    renderTableView(
-      grid,
-      files,
-      songCache,
-      visibleMetadata,
-      onPlay,
-      onContextMenu,
-      () => loadAllMusic()
-    );
-  } else {
-    renderGridView(grid, files, songCache, onPlay, onContextMenu);
-  }
-
+  renderFileList(files);
   loader.style.display = 'none';
 }
 

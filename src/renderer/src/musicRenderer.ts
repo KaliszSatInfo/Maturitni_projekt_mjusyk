@@ -155,11 +155,13 @@ async function playFile(file: string) {
         if (saveStateInterval !== null) { clearInterval(saveStateInterval); saveStateInterval = null; }
         savePlaybackState();
       },
-      onend: () => {
+      onend: async () => {
         stopListeningTimeUpdate();
         if (saveStateInterval !== null) { clearInterval(saveStateInterval); saveStateInterval = null; }
-        loopMode ? playCurrent() : playNext();
+        if (loopMode) await playCurrent();
+        else await playNext();
       },
+
       onload: () => updateProgress()
     });
 
@@ -170,29 +172,39 @@ async function playFile(file: string) {
 
 async function playCurrent() {
   queue = await window.api.getQueue();
-  index = await window.api.getCurrentIndex();
+  
   const file = queue[index];
-  if (file) playFile(file);
+  if (file) await playFile(file);
 }
 
-function playNext() {
+async function playNext() {
   stopListeningTimeUpdate();
+  queue = await window.api.getQueue();
   if (!queue.length) return;
-  if (shuffleMode) index = Math.floor(Math.random() * queue.length);
-  else index = (index < queue.length - 1) ? index + 1 : index;
-  window.api.setIndex(index);
-  savePlaybackState();
-  playCurrent();
+  if (shuffleMode) {
+    index = Math.floor(Math.random() * queue.length);
+  } else {
+    if (index < queue.length - 1) {
+      index = index + 1;
+    } else {
+      index = 0;
+    }
+  }
+
+  await window.api.setIndex(index);
+  await savePlaybackState();
+  await playCurrent();
 }
 
-function playPrev() {
+async function playPrev() {
   stopListeningTimeUpdate();
+  queue = await window.api.getQueue();
   if (!queue.length) return;
   if (shuffleMode) index = Math.floor(Math.random() * queue.length);
   else index = (index > 0) ? index - 1 : 0;
-  window.api.setIndex(index);
-  savePlaybackState();
-  playCurrent();
+  await window.api.setIndex(index);
+  await savePlaybackState();
+  await playCurrent();
 }
 
 async function recordPlay(file: string, playlistName?: string) {
